@@ -1,0 +1,2115 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>我的工作生活台 · 交互预览</title>
+<style>
+:root{
+  --accent:#5F7A63; --accent-l:#EEF2EE; --bg:#F4F4F1; --panel:#FFFFFF;
+  --line:#DDD9D2; --line-soft:#EDEAE3; --ink:#2F2F2C; --sub:#8A8A84;
+  --red:#C0392B; --green:#4A8A5C; --amber:#C9962E; --dev:#5B6D9E;
+  --r:12px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;}
+body{
+  margin:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:14px;min-height:100vh;padding:24px 12px;
+  background:radial-gradient(circle at 50% 0%,#F7F7F3 0%,#E7E7E1 55%,#DCDCD5 100%);
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Helvetica Neue","Microsoft YaHei",sans-serif;
+  color:var(--ink);
+}
+.headline{text-align:center;line-height:1.5;}
+.headline h1{margin:0;font-size:16px;font-weight:600;letter-spacing:.5px;color:#3A3A36;}
+.headline p{margin:3px 0 0;font-size:11.5px;color:#8A8A84;}
+
+/* ---------- 设备外壳 ---------- */
+.device{
+  position:relative;width:390px;height:844px;flex:none;
+  background:#15171A;border-radius:46px;
+  box-shadow:0 2px 0 #2C3034 inset,0 30px 60px -18px rgba(30,35,30,.45),0 0 0 1.5px #0C0D0F;
+  padding:11px;
+}
+.screen{
+  position:relative;width:100%;height:100%;overflow:hidden;
+  border-radius:36px;background:var(--bg);display:flex;flex-direction:column;
+}
+.notch{
+  position:absolute;top:11px;left:50%;transform:translateX(-50%);
+  width:112px;height:26px;background:#15171A;border-radius:0 0 16px 16px;z-index:60;
+}
+/* 状态栏 */
+.statusbar{
+  height:46px;flex:none;display:flex;align-items:center;justify-content:space-between;
+  padding:0 24px;font-size:12.5px;font-weight:600;color:var(--ink);letter-spacing:.3px;
+}
+.sb-right{display:flex;align-items:center;gap:5px;}
+.bars{display:flex;align-items:flex-end;gap:2px;height:10px;}
+.bars i{width:2.5px;background:currentColor;border-radius:1px;display:block;}
+.bars i:nth-child(1){height:4px}.bars i:nth-child(2){height:6px}
+.bars i:nth-child(3){height:8px}.bars i:nth-child(4){height:10px}
+.batt{width:20px;height:10px;border:1.3px solid currentColor;border-radius:3px;position:relative;opacity:.85;}
+.batt::after{content:'';position:absolute;right:-3.5px;top:2.6px;width:2px;height:4.8px;background:currentColor;border-radius:0 1px 1px 0;}
+.batt i{position:absolute;left:1.2px;top:1.2px;bottom:1.2px;width:11px;background:currentColor;border-radius:1.5px;}
+
+/* ---------- 顶栏 ---------- */
+.topbar{
+  height:56px;flex:none;display:flex;align-items:center;gap:10px;
+  padding:0 14px 0 10px;background:var(--panel);border-bottom:.5px solid var(--line);
+  position:relative;z-index:20;
+}
+.icon-btn{
+  width:34px;height:34px;flex:none;display:flex;align-items:center;justify-content:center;
+  font-size:18px;border-radius:9px;color:var(--ink);cursor:pointer;transition:background .15s;
+}
+.icon-btn:active{background:var(--accent-l);}
+.topbar .titles{flex:1;min-width:0;line-height:1.35;}
+.topbar .t1{font-size:16.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.topbar .t2{font-size:10px;color:var(--sub);letter-spacing:.2px;}
+.pill-badge{
+  display:flex;align-items:center;gap:5px;padding:4px 10px;border-radius:10px;
+  font-size:11px;font-weight:500;cursor:pointer;flex:none;
+}
+.pill-badge .dot{width:7px;height:7px;border-radius:50%;}
+.pill-badge.warn{background:#F4E6C9;color:#8A6A18;}
+.pill-badge.warn .dot{background:var(--amber);}
+.pill-badge.danger{background:#F7D9D3;color:#8A2C1C;}
+.pill-badge.danger .dot{background:var(--red);}
+
+/* ---------- 吃药灯条 ---------- */
+.pillbar{
+  flex:none;display:flex;align-items:center;gap:8px;padding:0 14px;height:44px;
+  font-size:12px;cursor:pointer;
+}
+.pillbar .pb-t{font-weight:600;white-space:nowrap;flex:none;}
+.pillbar .pb-s{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:.85;}
+.pillbar .pb-a{
+  flex:none;font-size:11.5px;color:#fff;border-radius:6px;padding:4px 9px;font-weight:500;
+}
+
+/* ---------- 主内容 ---------- */
+main{
+  flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;
+  padding:14px 16px 30px;display:flex;flex-direction:column;gap:12px;
+  scrollbar-width:none;
+}
+main::-webkit-scrollbar{display:none;}
+.home-bar{
+  position:absolute;bottom:8px;left:50%;transform:translateX(-50%);
+  width:132px;height:5px;border-radius:3px;background:rgba(47,47,44,.28);z-index:30;pointer-events:none;
+}
+
+/* ---------- 通用组件 ---------- */
+.card{
+  background:var(--panel);border:.8px solid var(--line-soft);border-radius:var(--r);
+  padding:13px 14px;display:flex;flex-direction:column;gap:10px;
+}
+.card.tight{padding:11px 13px;gap:8px;}
+.card-hd{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.card-title{font-size:13.5px;font-weight:600;display:flex;align-items:center;gap:6px;}
+.card-title .ic{font-size:13px;opacity:.9;}
+.card-more{font-size:11.5px;color:var(--accent);cursor:pointer;font-weight:500;white-space:nowrap;}
+.card-more:active{opacity:.6;}
+.muted{color:var(--sub);}
+.tiny{font-size:11px;}
+.sm{font-size:12px;}
+.b{font-weight:600;}
+.row{display:flex;align-items:center;gap:8px;}
+.between{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.wrap{flex-wrap:wrap;}
+.grow{flex:1;min-width:0;}
+.ellipsis{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.center{display:flex;align-items:center;justify-content:center;}
+.divider{height:.8px;background:var(--line-soft);margin:1px 0;}
+.empty{
+  padding:16px 8px;text-align:center;font-size:12px;color:var(--sub);
+  background:#FAFAF7;border-radius:9px;border:.8px dashed var(--line);
+}
+
+.btn{
+  border:none;border-radius:9px;padding:9px 14px;font-size:13px;font-weight:500;
+  background:var(--accent-l);color:var(--accent);cursor:pointer;font-family:inherit;
+  transition:transform .08s,filter .15s;white-space:nowrap;
+}
+.btn:active{transform:scale(.97);filter:brightness(.95);}
+.btn.primary{background:var(--accent);color:#fff;}
+.btn.ghost{background:#F2F2ED;color:var(--ink);}
+.btn.danger{background:#FBEDEA;color:var(--red);}
+.btn.sm{padding:6px 11px;font-size:12px;border-radius:8px;}
+.btn.xs{padding:4px 9px;font-size:11px;border-radius:7px;}
+.btn.block{width:100%;justify-content:center;text-align:center;}
+.btn:disabled{opacity:.45;cursor:not-allowed;}
+
+.tag{
+  display:inline-flex;align-items:center;font-size:10.5px;padding:1.5px 7px;
+  border-radius:9px;border:.8px solid currentColor;line-height:1.5;white-space:nowrap;
+}
+.tag.solid{border:none;color:#fff;}
+
+.input,select,textarea{
+  width:100%;font-family:inherit;font-size:13px;color:var(--ink);
+  background:#FBFBF8;border:.9px solid var(--line);border-radius:9px;
+  padding:9px 11px;outline:none;transition:border-color .15s,background .15s;
+}
+.input:focus,select:focus,textarea:focus{border-color:var(--accent);background:#fff;}
+textarea{resize:vertical;min-height:64px;line-height:1.55;}
+.field{display:flex;flex-direction:column;gap:5px;}
+.field > label{font-size:11.5px;color:var(--sub);font-weight:500;}
+.check{
+  width:19px;height:19px;flex:none;border-radius:6px;border:1.4px solid var(--line);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;background:#fff;
+  color:#fff;font-size:12px;transition:all .15s;
+}
+.check.on{background:var(--accent);border-color:var(--accent);}
+
+/* 分段标签 */
+.seg{
+  display:flex;background:#EDEDE7;border-radius:10px;padding:3px;gap:2px;
+}
+.seg > div{
+  flex:1;text-align:center;font-size:12.5px;padding:7px 4px;border-radius:8px;
+  color:var(--sub);cursor:pointer;transition:all .16s;font-weight:500;
+}
+.seg > div.on{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.07);}
+
+/* 进度 */
+.progress{height:5px;border-radius:3px;background:#EDEDE7;overflow:hidden;}
+.progress > i{display:block;height:100%;border-radius:3px;background:var(--accent);transition:width .3s;}
+
+/* 列表行 */
+.li{
+  display:flex;align-items:center;gap:10px;padding:9px 0;
+  border-bottom:.8px solid var(--line-soft);
+}
+.li:last-child{border-bottom:none;padding-bottom:2px;}
+.li:first-child{padding-top:2px;}
+
+/* 大数字 */
+.metric{display:flex;flex-direction:column;gap:2px;}
+.metric .v{font-size:26px;font-weight:600;letter-spacing:-.5px;line-height:1.15;}
+.metric .v small{font-size:13px;font-weight:500;margin-left:1px;}
+.metric .k{font-size:11px;color:var(--sub);}
+
+/* 热力图 */
+.heat{display:flex;flex-direction:column;gap:5px;}
+.heat-row{display:flex;gap:5px;}
+.heat-cell{
+  flex:1;aspect-ratio:1;border-radius:4px;background:#EEEEE8;
+  display:flex;align-items:center;justify-content:center;font-size:8px;color:#B4B4AC;
+}
+.heat-cell.lv1{background:#D8E3D8;}
+.heat-cell.lv2{background:#A9C2AC;}
+.heat-cell.lv3{background:#7A9C80;}
+.heat-cell.today{outline:1.5px solid var(--accent);outline-offset:1px;}
+
+/* 图表 */
+.chart{width:100%;height:118px;display:block;overflow:hidden;}
+.chart-wrap{position:relative;}
+
+/* 抽屉 */
+.mask{
+  position:absolute;inset:0;background:rgba(30,32,28,.34);z-index:70;
+  opacity:0;pointer-events:none;transition:opacity .22s;
+}
+.mask.on{opacity:1;pointer-events:auto;}
+.drawer{
+  position:absolute;top:0;left:0;bottom:0;width:74%;max-width:290px;z-index:80;
+  background:var(--panel);border-radius:0 18px 18px 0;
+  transform:translateX(-102%);transition:transform .26s cubic-bezier(.32,.72,0,1);
+  display:flex;flex-direction:column;padding-top:52px;
+  box-shadow:12px 0 40px -18px rgba(0,0,0,.3);
+}
+.drawer.on{transform:translateX(0);}
+.drawer-hd{padding:0 18px 14px;border-bottom:.8px solid var(--line-soft);}
+.drawer-hd .d1{font-size:15px;font-weight:600;color:var(--accent);}
+.drawer-hd .d2{font-size:10.5px;color:var(--sub);margin-top:3px;}
+.drawer-nav{flex:1;overflow-y:auto;padding:8px 0;}
+.dnav{
+  display:flex;align-items:center;gap:10px;height:46px;padding-left:18px;
+  font-size:13.5px;color:var(--ink);cursor:pointer;position:relative;transition:background .15s;
+}
+.dnav:active{background:#F6F6F1;}
+.dnav.on{background:var(--accent-l);color:var(--accent);font-weight:600;}
+.dnav.on::before{
+  content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--accent);
+}
+.dnav .di{font-size:14px;width:18px;text-align:center;}
+
+/* Toast */
+.toast{
+  position:absolute;left:50%;bottom:74px;transform:translate(-50%,10px);z-index:120;
+  background:#3A3A36;color:#fff;font-size:12.5px;border-radius:9px;
+  padding:10px 16px;max-width:82%;display:flex;align-items:center;gap:10px;
+  opacity:0;pointer-events:none;transition:all .22s;box-shadow:0 8px 24px -8px rgba(0,0,0,.5);
+}
+.toast.on{opacity:1;transform:translate(-50%,0);pointer-events:auto;}
+.toast .x{color:#B9B9B2;font-size:12px;cursor:pointer;}
+
+/* 弹窗 */
+.sheet-mask{
+  position:absolute;inset:0;background:rgba(30,32,28,.4);z-index:100;
+  display:flex;align-items:flex-end;opacity:0;pointer-events:none;transition:opacity .22s;
+}
+.sheet-mask.on{opacity:1;pointer-events:auto;}
+.sheet{
+  width:100%;background:#fff;border-radius:18px 18px 0 0;padding:18px 18px 22px;
+  max-height:82%;overflow-y:auto;transform:translateY(14px);transition:transform .24s;
+  display:flex;flex-direction:column;gap:12px;
+}
+.sheet-mask.on .sheet{transform:translateY(0);}
+.sheet h3{margin:0;font-size:15px;font-weight:600;}
+.sheet .sub{font-size:11.5px;color:var(--sub);margin-top:-8px;}
+.sheet .acts{display:flex;gap:10px;margin-top:4px;}
+.sheet .acts .btn{flex:1;}
+
+/* 工作日选择 */
+.wd{display:flex;gap:5px;}
+.wd > div{
+  flex:1;text-align:center;font-size:11.5px;padding:7px 0;border-radius:8px;
+  background:#F3F3EE;color:var(--sub);cursor:pointer;
+}
+.wd > div.on{background:var(--accent);color:#fff;}
+
+/* 柱状 */
+.bars-chart{display:flex;align-items:flex-end;gap:7px;height:70px;padding-top:4px;}
+.bars-chart .bc{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;height:100%;justify-content:flex-end;}
+.bars-chart .bc .bar{
+  width:100%;border-radius:4px 4px 2px 2px;background:var(--accent);min-height:3px;
+  transition:height .3s;
+}
+.bars-chart .bc .bl{font-size:9.5px;color:var(--sub);white-space:nowrap;}
+
+/* 底部提示 */
+.foot-note{
+  text-align:center;font-size:10.5px;color:#9A9A93;line-height:1.6;
+}
+.foot-note b{color:#6F6F68;font-weight:600;}
+
+@media (max-width:430px){
+  body{padding:0;gap:0;justify-content:flex-start;}
+  .headline{display:none;}
+  .device{width:100vw;height:100vh;height:100dvh;border-radius:0;padding:0;box-shadow:none;background:var(--bg);}
+  .screen{border-radius:0;}
+  .notch{display:none;}
+  .foot-note{display:none;}
+  .home-bar{display:none;}
+}
+</style>
+</head>
+<body>
+<div class="headline">
+  <h1>我的工作生活台 · 交互预览</h1>
+  <p>这是鸿蒙工程的 1:1 界面预览，可点击操作，数据存在浏览器本地</p>
+</div>
+
+<div class="device">
+  <div class="notch"></div>
+  <div class="screen">
+    <div class="statusbar">
+      <span id="clock">22:18</span>
+      <span class="sb-right">
+        <span class="bars"><i></i><i></i><i></i><i></i></span>
+        <span style="font-size:11px;font-weight:500">5G</span>
+        <span class="batt"><i></i></span>
+      </span>
+    </div>
+
+    <header class="topbar">
+      <div class="icon-btn" data-act="drawer">☰</div>
+      <div class="titles">
+        <div class="t1" id="topTitle">🏠 首页总览</div>
+        <div class="t2">我的工作生活台</div>
+      </div>
+      <div id="topBadge"></div>
+    </header>
+
+    <div id="pillBar"></div>
+    <main id="view"></main>
+    <div class="home-bar"></div>
+
+    <div class="mask" id="mask" data-act="closeDrawer"></div>
+    <aside class="drawer" id="drawer">
+      <div class="drawer-hd">
+        <div class="d1">我的工作生活台</div>
+        <div class="d2">本地私人应用 · 交互预览</div>
+      </div>
+      <div class="drawer-nav" id="dnav"></div>
+    </aside>
+
+    <div class="toast" id="toast"><span id="toastText"></span><span class="x" data-act="closeToast">✕</span></div>
+    <div class="sheet-mask" id="sheetMask"><div class="sheet" id="sheet"></div></div>
+  </div>
+</div>
+
+<div class="foot-note">
+  预览数据保存在浏览器 localStorage（键前缀 <b>wlt_</b>），与鸿蒙版 Preferences 结构一致<br>
+  在「数据与设置」里可导出 JSON 备份，直接喂给鸿蒙应用
+</div>
+
+<script>
+/* ===================================================================
+   我的工作生活台 · 交互预览
+   与 HarmonyOS (ArkTS) 版共用同一套数据模型与业务规则
+   =================================================================== */
+
+/* ---------- 基础工具 ---------- */
+const WEEK = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+const pad = n => (n < 10 ? '0' + n : '' + n);
+const dstr = d => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+const todayStr = () => dstr(new Date());
+const addDays = n => { const d = new Date(); d.setDate(d.getDate() + n); return dstr(d); };
+const nowHM = () => { const d = new Date(); return pad(d.getHours()) + ':' + pad(d.getMinutes()); };
+const uid = () => Math.random().toString(36).slice(2, 9) + Date.now().toString(36).slice(-3);
+const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+function mdText(s) {
+  const p = String(s).split('-').map(Number);
+  const dt = new Date(p[0], p[1] - 1, p[2]);
+  return p[1] + '月' + p[2] + '日 ' + WEEK[dt.getDay()];
+}
+function hm2min(hm) { const p = String(hm).split(':'); return (+p[0]) * 60 + (+p[1] || 0); }
+function min2hm(m) { return pad(Math.floor(m / 60)) + ':' + pad(m % 60); }
+function daysBetween(a, b) {
+  const p1 = a.split('-').map(Number), p2 = b.split('-').map(Number);
+  return Math.round((new Date(p2[0], p2[1] - 1, p2[2]) - new Date(p1[0], p1[1] - 1, p1[2])) / 86400000);
+}
+
+/* ---------- 存储层（对应 ArkTS 的 Store / Preferences） ---------- */
+const K = k => 'wlt_' + k;
+const Store = {
+  get(k, def) {
+    try {
+      const s = localStorage.getItem(K(k));
+      if (s === null) return def;
+      return JSON.parse(s);
+    } catch (e) { return def; }
+  },
+  set(k, v) {
+    try { localStorage.setItem(K(k), JSON.stringify(v)); } catch (e) { }
+  },
+  keys() {
+    const out = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.indexOf('wlt_') === 0) out.push(k);
+    }
+    return out;
+  },
+  remove(k) { localStorage.removeItem(K(k)); },
+  sizeKB() {
+    let b = 0;
+    this.keys().forEach(k => { b += (localStorage.getItem(k) || '').length; });
+    return (b / 1024);
+  },
+  clearAll() { this.keys().forEach(k => localStorage.removeItem(k)); }
+};
+
+/* ---------- 示例数据（与 ArkTS Seed 完全一致） ---------- */
+const DEFAULT_SETTINGS = { name: '我', weekStart: 1, lastBackupAt: 0, city: '北京' };
+
+function seed() {
+  const t = todayStr(), wd = new Date().getDay(), pid = 'seedp1';
+  Store.set('dev_projects', [{ id: pid, name: '示例项目：私人App开发', status: 'active' }]);
+  Store.set('dev_tasks', [
+    { id: 'seedt1', projectId: pid, title: '熟悉首页布局设计', status: 'done', due: t },
+    { id: 'seedt2', projectId: pid, title: '完成本地存储模块', status: 'doing', due: t },
+    { id: 'seedt3', projectId: pid, title: '编写备份导出功能', status: 'todo', due: addDays(3) }
+  ]);
+  Store.set('dev_notes', [{
+    id: 'seedn1', title: 'Preferences 使用注意', tags: ['鸿蒙', '存储'],
+    body: '单条 value 建议 < 8KB，总量建议 < 1MB；大量数据可换用关系型数据库 RDB。改动后调用 flush 落盘。',
+    updatedAt: Date.now()
+  }]);
+  Store.set('dev_time', [{ id: 'seedtm1', date: t, projectId: pid, minutes: 45, note: '首页布局' }]);
+  Store.set('rehab_plans', [{
+    id: 'seedrp1', name: '示例计划：上肢康复', weekdays: [wd],
+    actions: [
+      { name: '肩部外旋', sets: '3', repsOrSec: '12次', note: '' },
+      { name: '颈部拉伸', sets: '2', repsOrSec: '30秒', note: '' }
+    ]
+  }]);
+  Store.set('rehab_logs', []);
+  const days = {};
+  days[t] = {
+    meals: [
+      { id: 'seedm1', slot: '早餐', content: '燕麦 + 鸡蛋 + 牛奶', eaten: true, note: '' },
+      { id: 'seedm2', slot: '午餐', content: '鸡胸肉 + 糙米饭 + 青菜', eaten: false, note: '' }
+    ]
+  };
+  Store.set('diet_days', days);
+  Store.set('diet_templates', [{
+    id: 'seedtp1', name: '示例模板：清淡日',
+    meals: [
+      { slot: '早餐', content: '小米粥 + 鸡蛋' },
+      { slot: '午餐', content: '清蒸鱼 + 西兰花' },
+      { slot: '晚餐', content: '蔬菜汤 + 杂粮饭' }
+    ]
+  }]);
+  Store.set('meds', [{
+    id: 'seedmd1', name: '示例药品：维生素D', dose: '1粒',
+    times: ['08:00', '20:00'], note: '随餐服用', active: true
+  }]);
+  Store.set('med_logs', {});
+  Store.set('temp_logs', [
+    { id: 'seedtm_a', datetime: t + 'T07:30', value: 36.5, note: '腋温' },
+    { id: 'seedtm_b', datetime: t + 'T19:30', value: 36.7, note: '腋温' }
+  ]);
+  Store.set('humid_logs', [{ id: 'seedhm1', datetime: t + 'T09:00', value: 52, place: '卧室', note: '' }]);
+  Store.set('memos', [{ id: 'seedmm1', text: '示例备忘：今晚记得导出一次备份', done: false, createdAt: Date.now() }]);
+  Store.set('settings', DEFAULT_SETTINGS);
+}
+if (Store.get('settings', null) === null) seed();
+
+/* ---------- 全局状态 ---------- */
+const state = {
+  view: 'home',
+  devTab: 0,               // 0 看板 1 笔记 2 时间
+  devProject: (Store.get('dev_projects', [])[0] || {}).id || '',
+  noteQuery: '',
+  dietDate: todayStr(),
+  running: null,           // { projectId, label, startedAt }
+  tick: 0
+};
+
+const NAV = [
+  { key: 'home', icon: '🏠', label: '首页总览' },
+  { key: 'dev', icon: '💻', label: '开发工作' },
+  { key: 'rehab', icon: '🩹', label: '康复训练' },
+  { key: 'diet', icon: '🥗', label: '饮食计划' },
+  { key: 'med', icon: '💊', label: '吃药提醒' },
+  { key: 'temp', icon: '🌡️', label: '体温监测' },
+  { key: 'humid', icon: '💧', label: '环境湿度' },
+  { key: 'settings', icon: '⚙️', label: '数据与设置' }
+];
+
+const TEMP_COLOR = { 高热: '#C0392B', 发热: '#C9962E', 偏低: '#C9962E', 正常: '#4A8A5C' };
+const HUM_COLOR = { 过干: '#C9962E', 过湿: '#C0392B', 舒适: '#4A8A5C' };
+function tempLevel(v) {
+  if (v >= 39) return { txt: '高热', color: TEMP_COLOR['高热'] };
+  if (v >= 37.3) return { txt: '发热', color: TEMP_COLOR['发热'] };
+  if (v < 36) return { txt: '偏低', color: TEMP_COLOR['偏低'] };
+  return { txt: '正常', color: TEMP_COLOR['正常'] };
+}
+function humidLevel(v) {
+  if (v < 30) return { txt: '过干', color: HUM_COLOR['过干'] };
+  if (v > 70) return { txt: '过湿', color: HUM_COLOR['过湿'] };
+  return { txt: '舒适', color: HUM_COLOR['舒适'] };
+}
+
+/* ---------- Toast / 抽屉 / 弹窗 ---------- */
+let toastTimer = null;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  document.getElementById('toastText').textContent = msg;
+  el.classList.add('on');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('on'), 2400);
+}
+function openDrawer() {
+  document.getElementById('mask').classList.add('on');
+  document.getElementById('drawer').classList.add('on');
+}
+function closeDrawer() {
+  document.getElementById('mask').classList.remove('on');
+  document.getElementById('drawer').classList.remove('on');
+}
+function openSheet(html) {
+  document.getElementById('sheet').innerHTML = html;
+  document.getElementById('sheetMask').classList.add('on');
+}
+function closeSheet() {
+  document.getElementById('sheetMask').classList.remove('on');
+}
+function val(id) {
+  const el = document.getElementById(id);
+  return el ? String(el.value || '').trim() : '';
+}
+function num(id, def) {
+  const v = parseFloat(val(id));
+  return isNaN(v) ? def : v;
+}
+
+/* ---------- 吃药提醒规则（对应 MedReminder） ---------- */
+function medStatus() {
+  const meds = Store.get('meds', []).filter(m => m.active);
+  const logs = Store.get('med_logs', {});
+  const t = todayStr();
+  const dayLog = logs[t] || {};
+  const now = hm2min(nowHM());
+  let worst = 0;   // 0 正常 1 待服 2 漏服
+  let title = '', sub = '', count = { wait: 0, miss: 0 };
+
+  meds.forEach(m => {
+    (m.times || []).forEach(tm => {
+      const key = m.id + '@' + tm;
+      if (dayLog[key]) return;
+      const at = hm2min(tm);
+      if (now >= at + 120) {
+        worst = 2; count.miss++;
+        title = '漏服提醒';
+        sub = (sub ? sub + '；' : '') + m.name + ' ' + tm + ' 该吃了（已超 2 小时）';
+      } else if (now >= at - 30) {
+        worst = Math.max(worst, 1); count.wait++;
+        if (!sub) { title = '待服药'; sub = m.name + ' ' + tm + ' 到点服药'; }
+      }
+    });
+  });
+  if (worst === 2) title = '漏服提醒';
+  return { level: worst, title, sub, count };
+}
+
+/* ---------- 首页聚合：今日计划 ---------- */
+function todayItems() {
+  const t = todayStr();
+  const wd = new Date().getDay();
+  const items = [];
+
+  // 开发任务（今天到期且未完成）
+  Store.get('dev_tasks', []).forEach(k => {
+    if (k.due === t && k.status !== 'done') {
+      items.push({ key: 'dev:' + k.id, text: k.title, tag: '开发', color: '#5B6D9E', done: false });
+    }
+  });
+  // 康复动作
+  const wdStr = String(wd);
+  const logs = Store.get('rehab_logs', []);
+  const rlog = logs.find(l => l.date === t) || { items: {}, feel: '' };
+  Store.get('rehab_plans', []).forEach(p => {
+    if ((p.weekdays || []).indexOf(wd) < 0) return;
+    (p.actions || []).forEach((a, i) => {
+      const kk = p.id + ':' + i;
+      items.push({
+        key: 'rehab:' + kk, text: a.name + ' ' + a.sets + '组 × ' + a.repsOrSec,
+        tag: '康复', color: '#4A8A5C', done: !!rlog.items[kk]
+      });
+    });
+  });
+  // 饮食
+  const dd = Store.get('diet_days', {})[t];
+  if (dd) {
+    (dd.meals || []).forEach(m => {
+      items.push({ key: 'diet:' + m.id, text: m.slot + '：' + m.content, tag: '饮食', color: '#C9962E', done: !!m.eaten });
+    });
+  }
+  // 吃药
+  const meds = Store.get('meds', []).filter(m => m.active);
+  const mlogs = (Store.get('med_logs', {})[t]) || {};
+  meds.forEach(m => (m.times || []).forEach(tm => {
+    items.push({
+      key: 'med:' + m.id + '@' + tm, text: m.name + ' ' + m.dose + '（' + tm + '）',
+      tag: '吃药', color: '#B35C4D', done: !!mlogs[m.id + '@' + tm]
+    });
+  }));
+  // 备忘
+  Store.get('memos', []).filter(m => !m.done).forEach(m => {
+    items.push({ key: 'memo:' + m.id, text: m.text, tag: '备忘', color: '#8A8A84', done: false });
+  });
+
+  return items;
+}
+
+function toggleToday(key) {
+  const t = todayStr();
+  const parts = key.split(':');
+  const kind = parts[0];
+
+  if (kind === 'dev') {
+    const list = Store.get('dev_tasks', []);
+    const it = list.find(x => x.id === parts[1]);
+    if (it) { it.status = it.status === 'done' ? 'todo' : 'done'; Store.set('dev_tasks', list); }
+  } else if (kind === 'rehab') {
+    const kk = parts[1] + ':' + parts[2];
+    const logs = Store.get('rehab_logs', []);
+    let lg = logs.find(l => l.date === t);
+    if (!lg) { lg = { date: t, items: {}, feel: '' }; logs.unshift(lg); }
+    lg.items[kk] = !lg.items[kk];
+    Store.set('rehab_logs', logs);
+  } else if (kind === 'diet') {
+    const map = Store.get('diet_days', {});
+    if (map[t]) {
+      const m = (map[t].meals || []).find(x => x.id === parts[1]);
+      if (m) m.eaten = !m.eaten;
+      Store.set('diet_days', map);
+    }
+  } else if (kind === 'med') {
+    const logs = Store.get('med_logs', {});
+    if (!logs[t]) logs[t] = {};
+    const mk = parts[1] + '@' + parts[2];
+    logs[t][mk] = !logs[t][mk];
+    Store.set('med_logs', logs);
+  } else if (kind === 'memo') {
+    const list = Store.get('memos', []);
+    const it = list.find(x => x.id === parts[1]);
+    if (it) { it.done = !it.done; Store.set('memos', list); }
+  }
+  render();
+}
+
+/* ---------- 通用渲染片段 ---------- */
+function card(title, icon, body, more) {
+  return `<section class="card">
+    <div class="card-hd">
+      <div class="card-title"><span class="ic">${icon}</span>${esc(title)}</div>
+      ${more ? `<div class="card-more" ${more.act ? `data-act="${more.act}"` : ''}>${esc(more.text)}</div>` : ''}
+    </div>
+    ${body}
+  </section>`;
+}
+function empty(text) { return `<div class="empty">${esc(text)}</div>`; }
+function tag(text, color) {
+  return `<span class="tag" style="color:${color}">${esc(text)}</span>`;
+}
+
+/* 折线图：values 数字数组，labels 可选 */
+function lineChart(values, opts) {
+  opts = opts || {};
+  if (!values.length) return empty('暂无数据');
+  const W = 306, H = 108, PL = 30, PR = 8, PT = 10, PB = 16;
+  let lo = values[0], hi = values[0];
+  values.forEach(v => { lo = Math.min(lo, v); hi = Math.max(hi, v); });
+  if (opts.min != null) lo = Math.min(lo, opts.min);
+  if (opts.max != null) hi = Math.max(hi, opts.max);
+  const padV = (hi - lo) * 0.25 || 0.6;
+  const lo2 = lo - padV, hi2 = hi + padV;
+  const X = i => PL + (values.length === 1 ? (W - PL - PR) / 2 : i * (W - PL - PR) / (values.length - 1));
+  const Y = v => PT + (hi2 - v) / (hi2 - lo2) * (H - PT - PB);
+
+  let pts = values.map((v, i) => X(i) + ',' + Y(v)).join(' ');
+  let grid = '', warn = '';
+  if (opts.warn != null) {
+    const wy = clamp(Y(opts.warn), PT + 7, H - PB - 4);
+    warn = `<line x1="${PL}" y1="${wy}" x2="${W - PR}" y2="${wy}" stroke="#C9962E" stroke-width="1" stroke-dasharray="4 3" opacity=".75"/>
+      <text x="${W - PR}" y="${wy - 4}" font-size="8.5" fill="#A3823C" text-anchor="end">警戒 ${opts.warn}</text>`;
+  }
+  const yTicks = [hi2, (hi2 + lo2) / 2, lo2].map(v =>
+    `<line x1="${PL}" y1="${Y(v)}" x2="${W - PR}" y2="${Y(v)}" stroke="#EDEAE3" stroke-width="1"/>
+     <text x="${PL - 5}" y="${Y(v) + 3}" font-size="8.5" fill="#A6A6A0" text-anchor="end">${v.toFixed(1)}</text>`
+  ).join('');
+
+  const dots = values.map((v, i) =>
+    `<circle cx="${X(i)}" cy="${Y(v)}" r="2.6" fill="#fff" stroke="#5F7A63" stroke-width="1.6"/>`).join('');
+
+  const area = `M ${PL} ${H - PB} L ${values.map((v, i) => X(i) + ' ' + Y(v)).join(' L ')} L ${X(values.length - 1)} ${H - PB} Z`;
+
+  return `<div class="chart-wrap"><svg class="chart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+    ${yTicks}${warn}
+    <path d="${area}" fill="#5F7A63" opacity=".07"/>
+    <polyline points="${pts}" fill="none" stroke="#5F7A63" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/>
+    ${dots}
+  </svg></div>`;
+}
+
+/* ===================================================================
+   页面：首页总览
+   =================================================================== */
+function viewHome() {
+  const items = todayItems();
+  const doneN = items.filter(i => i.done).length;
+  const total = items.length;
+  const pct = total ? Math.round(doneN / total * 100) : 0;
+  const settings = Store.get('settings', DEFAULT_SETTINGS);
+  const hh = new Date().getHours();
+  const greet = hh < 6 ? '凌晨好' : hh < 11 ? '早上好' : hh < 14 ? '中午好' : hh < 18 ? '下午好' : '晚上好';
+  const who = (settings.name || '') ? '，' + settings.name : '';
+
+  // 模块摘要
+  const temps = Store.get('temp_logs', []);
+  const lastT = temps.length ? temps[temps.length - 1] : null;
+  const hums = Store.get('humid_logs', []);
+  const lastH = hums.length ? hums[hums.length - 1] : null;
+  const rate = adherence7();
+
+  const head = `<section class="card" style="gap:12px">
+    <div class="between">
+      <div>
+        <div style="font-size:18px;font-weight:600;letter-spacing:-.2px">${greet}${esc(who)}</div>
+        <div class="tiny muted" style="margin-top:3px">${mdText(todayStr())} · 今天还有 ${total - doneN} 件事</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:20px;font-weight:600;color:var(--accent);line-height:1">${pct}%</div>
+        <div class="tiny muted">完成度</div>
+      </div>
+    </div>
+    <div class="progress"><i style="width:${pct}%"></i></div>
+    <div class="row" style="gap:16px">
+      <div class="metric"><div class="v" style="font-size:17px">${doneN}<small class="muted" style="font-size:11px"> / ${total}</small></div><div class="k">今日事项</div></div>
+      <div style="width:1px;height:26px;background:var(--line-soft)"></div>
+      <div class="metric"><div class="v" style="font-size:17px;color:${rate >= 80 ? 'var(--green)' : rate >= 50 ? 'var(--amber)' : 'var(--red)'}">${rate}%</div><div class="k">近 7 天服药</div></div>
+      <div style="width:1px;height:26px;background:var(--line-soft)"></div>
+      <div class="metric"><div class="v" style="font-size:17px">${rehabStreak()}<small class="muted" style="font-size:11px">天</small></div><div class="k">康复连续</div></div>
+    </div>
+  </section>`;
+
+  // 今日计划
+  let planBody = '';
+  if (!items.length) {
+    planBody = empty('今天暂无来自各模块的计划，去各模块添加吧');
+  } else {
+    planBody = items.map(it => `<div class="li" data-act="toggleToday" data-key="${it.key}">
+      <div class="check ${it.done ? 'on' : ''}">${it.done ? '✓' : ''}</div>
+      <div class="grow" style="min-width:0">
+        <div class="sm ${it.done ? 'muted' : ''}" style="text-decoration:${it.done ? 'line-through' : 'none'};line-height:1.4">${esc(it.text)}</div>
+      </div>
+      ${tag(it.tag, it.color)}
+    </div>`).join('');
+  }
+
+  // 备忘
+  const memos = Store.get('memos', []);
+  const openMemos = memos.filter(m => !m.done);
+  let memoBody = '';
+  if (!openMemos.length) {
+    memoBody = empty('暂无备忘');
+  } else {
+    memoBody = openMemos.map(m => `<div class="li">
+      <div class="check" data-act="memoDone" data-id="${m.id}"></div>
+      <div class="grow sm" style="line-height:1.4">${esc(m.text)}</div>
+      <span class="muted tiny" data-act="memoDel" data-id="${m.id}" style="padding:2px 6px;cursor:pointer">✕</span>
+    </div>`).join('');
+  }
+  const memoInput = `<div class="row" style="gap:8px">
+    <input class="input" id="newMemo" placeholder="随手记一条…" style="flex:1">
+    <button class="btn primary sm" data-act="memoAdd">添加</button>
+  </div>`;
+
+  // 模块摘要
+  const tLevel = lastT ? tempLevel(lastT.value) : null;
+  const hLevel = lastH ? humidLevel(lastH.value) : null;
+
+  const grid = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+    <div class="card tight" data-act="go" data-view="temp" style="cursor:pointer">
+      <div class="row between"><span class="tiny muted">体温</span>${tLevel ? tag(tLevel.txt, tLevel.color) : ''}</div>
+      <div style="font-size:20px;font-weight:600;line-height:1.1">${lastT ? lastT.value.toFixed(1) + '<small style="font-size:11px;font-weight:500"> ℃</small>' : '—'}</div>
+      <div class="tiny muted">${lastT ? esc(lastT.datetime.slice(11)) + ' 测得' : '暂无记录'}</div>
+    </div>
+    <div class="card tight" data-act="go" data-view="humid" style="cursor:pointer">
+      <div class="row between"><span class="tiny muted">湿度</span>${hLevel ? tag(hLevel.txt, hLevel.color) : ''}</div>
+      <div style="font-size:20px;font-weight:600;line-height:1.1">${lastH ? Math.round(lastH.value) + '<small style="font-size:11px;font-weight:500"> %</small>' : '—'}</div>
+      <div class="tiny muted">${lastH ? esc(lastH.place || '室内') : '暂无记录'}</div>
+    </div>
+    <div class="card tight" data-act="go" data-view="med" style="cursor:pointer">
+      <div class="row between"><span class="tiny muted">今日服药</span></div>
+      <div style="font-size:20px;font-weight:600;line-height:1.1">${medTodayRatio()}</div>
+      <div class="tiny muted">已完成 / 应服</div>
+    </div>
+    <div class="card tight" data-act="go" data-view="dev" style="cursor:pointer">
+      <div class="row between"><span class="tiny muted">本周编码</span></div>
+      <div style="font-size:20px;font-weight:600;line-height:1.1">${weekMinutes()}<small style="font-size:11px;font-weight:500"> 分</small></div>
+      <div class="tiny muted">时间记录累计</div>
+    </div>
+  </div>`;
+
+  return head
+    + card('今日计划', '📋', planBody, { text: total - doneN > 0 ? '还剩 ' + (total - doneN) + ' 项' : '全部完成' })
+    + `<section class="card">
+        <div class="card-hd"><div class="card-title"><span class="ic">📝</span>快速备忘</div>
+        <div class="card-more" data-act="go" data-view="settings">管理</div></div>
+        ${memoBody}${memoInput}
+      </section>`
+    + `<div class="card-title" style="padding:2px 2px 0">模块摘要</div>`
+    + grid;
+}
+
+function medTodayRatio() {
+  const meds = Store.get('meds', []).filter(m => m.active);
+  let total = 0, done = 0;
+  const logs = (Store.get('med_logs', {})[todayStr()]) || {};
+  meds.forEach(m => (m.times || []).forEach(tm => {
+    total++;
+    if (logs[m.id + '@' + tm]) done++;
+  }));
+  return total ? done + ' / ' + total : '—';
+}
+
+function weekMinutes() {
+  let sum = 0;
+  const recs = Store.get('dev_time', []);
+  recs.forEach(r => { if (daysBetween(r.date, todayStr()) < 7 && daysBetween(r.date, todayStr()) >= 0) sum += r.minutes; });
+  return sum;
+}
+
+function adherence7() {
+  const meds = Store.get('meds', []);
+  const logs = Store.get('med_logs', {});
+  let total = 0, done = 0;
+  for (let i = 0; i < 7; i++) {
+    const d = addDays(-i);
+    meds.forEach(m => (m.times || []).forEach(tm => {
+      total++;
+      if ((logs[d] || {})[m.id + '@' + tm]) done++;
+    }));
+  }
+  return total ? Math.round(done / total * 100) : 0;
+}
+
+/* 康复连续天数 */
+function rehabStreak() {
+  const logs = Store.get('rehab_logs', []);
+  let n = 0;
+  for (let i = 0; i < 365; i++) {
+    const d = addDays(-i);
+    const lg = logs.find(l => l.date === d);
+    const any = lg && Object.keys(lg.items || {}).some(k => lg.items[k]);
+    if (any) n++;
+    else if (i > 0) break;
+  }
+  return n;
+}
+/* ===================================================================
+   页面：开发工作
+   =================================================================== */
+const TASK_COLORS = { todo: '#8A8A84', doing: '#C9962E', done: '#4A8A5C' };
+const TASK_TEXT = { todo: '待办', doing: '进行中', done: '已完成' };
+
+function projectProgress(pid) {
+  const tasks = Store.get('dev_tasks', []).filter(t => t.projectId === pid);
+  if (!tasks.length) return { done: 0, total: 0, pct: 0 };
+  const done = tasks.filter(t => t.status === 'done').length;
+  return { done, total: tasks.length, pct: Math.round(done / tasks.length * 100) };
+}
+
+function viewDev() {
+  const tabs = `<div class="seg">
+    ${['任务看板', '开发笔记', '时间记录'].map((t, i) =>
+    `<div class="${state.devTab === i ? 'on' : ''}" data-act="devTab" data-i="${i}">${t}</div>`).join('')}
+  </div>`;
+  return tabs + (state.devTab === 0 ? devBoard() : state.devTab === 1 ? devNotes() : devTime());
+}
+
+function devBoard() {
+  const projects = Store.get('dev_projects', []);
+  if (!state.devProject && projects.length) state.devProject = projects[0].id;
+
+  const chips = `<div class="row wrap" style="gap:6px">
+    ${projects.map(p => `<div class="btn xs ${state.devProject === p.id ? 'primary' : 'ghost'}"
+      data-act="pickProject" data-id="${p.id}" style="padding:5px 10px">${esc(p.name.replace('示例项目：', ''))}</div>`).join('')}
+    <div class="btn xs ghost" data-act="newProject" style="padding:5px 10px">＋ 项目</div>
+  </div>`;
+
+  if (!projects.length) return `<section class="card">${empty('还没有项目，先建一个吧')}
+    <button class="btn primary block" data-act="newProject">新建项目</button></section>`;
+
+  const cur = projects.find(p => p.id === state.devProject) || projects[0];
+  const pg = projectProgress(cur.id);
+  const tasks = Store.get('dev_tasks', []).filter(t => t.projectId === cur.id);
+
+  const head = `<section class="card">
+    <div class="between">
+      <div class="grow" style="min-width:0">
+        <div class="b" style="font-size:14px">${esc(cur.name)}</div>
+        <div class="tiny muted" style="margin-top:2px">${pg.done} / ${pg.total} 个任务已完成</div>
+      </div>
+      <div style="font-size:18px;font-weight:600;color:var(--accent)">${pg.pct}%</div>
+    </div>
+    <div class="progress"><i style="width:${pg.pct}%"></i></div>
+    ${chips}
+  </section>`;
+
+  const cols = ['todo', 'doing', 'done'].map(st => {
+    const list = tasks.filter(t => t.status === st);
+    const rows = list.length ? list.map(t => `<div class="li" style="align-items:flex-start;gap:8px">
+        <div class="grow" style="min-width:0">
+          <div class="sm" data-act="taskCycle" data-id="${t.id}" style="line-height:1.4;cursor:pointer">${esc(t.title)}</div>
+          <div class="tiny muted" style="margin-top:3px">${t.due === todayStr() ? '今天到期' : esc(t.due || '无期限')}</div>
+        </div>
+        <span class="muted" data-act="taskDel" data-id="${t.id}" style="font-size:11px;padding:2px 4px;cursor:pointer">✕</span>
+      </div>`).join('') : `<div class="tiny muted" style="padding:6px 0 2px">空</div>`;
+    return `<div style="display:flex;flex-direction:column;gap:6px">
+      <div class="row between">
+        <div class="tiny b" style="color:${TASK_COLORS[st]}">${TASK_TEXT[st]}</div>
+        <div class="tiny muted">${list.length}</div>
+      </div>
+      <div style="background:#FAFAF7;border-radius:10px;padding:8px 10px;min-height:44px">${rows}</div>
+    </div>`;
+  }).join('');
+
+  return head
+    + card('任务看板', '🗂️', `<div style="display:flex;flex-direction:column;gap:12px">${cols}</div>`,
+      { text: '＋ 新建', act: 'newTask' })
+    + `<div class="tiny muted center" style="padding-top:2px">点击任务文字可切换：待办 → 进行中 → 已完成</div>`;
+}
+
+function devNotes() {
+  const all = Store.get('dev_notes', []);
+  const q = state.noteQuery.trim();
+  const list = q ? all.filter(n => (n.title + n.body + (n.tags || []).join('')).indexOf(q) >= 0) : all;
+
+  const search = `<div class="row" style="gap:8px">
+    <input class="input" id="noteSearch" placeholder="搜索标题 / 正文 / 标签" value="${esc(q)}" style="flex:1">
+    <button class="btn primary sm" data-act="newNote">新建</button>
+  </div>`;
+
+  const body = list.length ? list.map(n => `<div class="li" style="align-items:flex-start">
+      <div class="grow" style="min-width:0" data-act="openNote" data-id="${n.id}">
+        <div class="b sm" style="line-height:1.4">${esc(n.title)}</div>
+        <div class="tiny muted" style="margin-top:3px;line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${esc(n.body)}</div>
+        <div class="row wrap" style="gap:5px;margin-top:5px">
+          ${(n.tags || []).map(t => `<span class="tiny" style="color:var(--accent);background:var(--accent-l);border-radius:5px;padding:1px 6px">${esc(t)}</span>`).join('')}
+        </div>
+      </div>
+      <span class="muted" data-act="noteDel" data-id="${n.id}" style="font-size:11px;padding:2px 4px;cursor:pointer">✕</span>
+    </div>`).join('') : empty(q ? '没有匹配的笔记' : '还没有笔记');
+
+  return search + `<section class="card"><div class="card-hd"><div class="card-title"><span class="ic">📔</span>开发笔记</div>
+    <div class="card-more">${list.length} 条</div></div>${body}</section>`;
+}
+
+function devTime() {
+  const projects = Store.get('dev_projects', []);
+  const recs = Store.get('dev_time', []);
+
+  // 计时器卡
+  let timerBody;
+  if (state.running) {
+    const mins = Math.floor((Date.now() - state.running.startedAt) / 60000);
+    const secs = Math.floor((Date.now() - state.running.startedAt) / 1000) % 60;
+    timerBody = `<div class="between">
+      <div>
+        <div class="tiny muted">正在计时 · ${esc(state.running.label || '未命名')}</div>
+        <div id="timerText" style="font-size:28px;font-weight:600;letter-spacing:-.5px;color:var(--accent);line-height:1.25">${pad(Math.floor((Date.now() - state.running.startedAt) / 3600000))}:${pad(mins % 60)}:${pad(secs)}</div>
+      </div>
+      <button class="btn danger" data-act="timerStop">结束并保存</button>
+    </div>`;
+  } else {
+    timerBody = `<div class="row" style="gap:8px">
+      <select id="timerProject" style="flex:1">
+        ${projects.map(p => `<option value="${p.id}">${esc(p.name)}</option>`).join('') || '<option value="">无项目</option>'}
+      </select>
+      <button class="btn primary" data-act="timerStart">开始</button>
+    </div>
+    <input class="input" id="timerLabel" placeholder="在做什么？（可选）">`;
+  }
+
+  // 近 7 天
+  const days = [];
+  for (let i = 6; i >= 0; i--) days.push(addDays(-i));
+  const sums = days.map(d => recs.filter(r => r.date === d).reduce((a, b) => a + b.minutes, 0));
+  const mx = Math.max.apply(null, sums.concat([1]));
+  const bars = `<div class="bars-chart">
+    ${days.map((d, i) => `<div class="bc">
+      <div class="bar" style="height:${Math.max(3, sums[i] / mx * 46)}px;opacity:${sums[i] ? 1 : .25}"></div>
+      <div class="bl">${sums[i] ? sums[i] : ''}</div>
+      <div class="bl" style="opacity:.7">${WEEK[new Date(d.split('-')[0], d.split('-')[1] - 1, d.split('-')[2]).getDay()].replace('周', '')}</div>
+    </div>`).join('')}
+  </div>`;
+
+  const recent = recs.slice().sort((a, b) => a.date < b.date ? 1 : -1).slice(0, 8);
+  const rows = recent.length ? recent.map(r => {
+    const p = projects.find(x => x.id === r.projectId);
+    return `<div class="li">
+      <div class="grow" style="min-width:0">
+        <div class="sm">${esc(r.note || (p ? p.name : '未关联项目'))}</div>
+        <div class="tiny muted" style="margin-top:2px">${esc(r.date)} · ${esc(p ? p.name : '')}</div>
+      </div>
+      <div class="b sm" style="color:var(--dev)">${r.minutes} 分</div>
+    </div>`;
+  }).join('') : empty('还没有时间记录');
+
+  return `<section class="card">
+      <div class="card-hd"><div class="card-title"><span class="ic">⏱️</span>番茄计时</div>
+        <div class="card-more" data-act="manualTime">手动补记</div></div>
+      ${timerBody}
+    </section>`
+    + card('近 7 天投入', '📊', bars + `<div class="tiny muted center">本周累计 ${weekMinutes()} 分钟</div>`)
+    + card('最近记录', '🗃️', rows);
+}
+
+/* ===================================================================
+   页面：康复训练
+   =================================================================== */
+function viewRehab() {
+  const t = todayStr();
+  const wd = new Date().getDay();
+  const plans = Store.get('rehab_plans', []);
+  const logs = Store.get('rehab_logs', []);
+  let lg = logs.find(l => l.date === t);
+  if (!lg) { lg = { date: t, items: {}, feel: '' }; }
+
+  const todayPlans = plans.filter(p => (p.weekdays || []).indexOf(wd) >= 0);
+
+  // 今日任务
+  let actBody = '';
+  if (!todayPlans.length) {
+    actBody = empty('今天没有安排训练，休息一天');
+  } else {
+    let rows = [];
+    todayPlans.forEach(p => (p.actions || []).forEach((a, i) => {
+      const kk = p.id + ':' + i;
+      const on = !!lg.items[kk];
+      rows.push(`<div class="li" data-act="rehabCheck" data-key="${kk}">
+        <div class="check ${on ? 'on' : ''}">${on ? '✓' : ''}</div>
+        <div class="grow" style="min-width:0">
+          <div class="sm ${on ? 'muted' : ''}" style="text-decoration:${on ? 'line-through' : 'none'}">${esc(a.name)}</div>
+          <div class="tiny muted" style="margin-top:2px">${esc(a.sets)} 组 × ${esc(a.repsOrSec)}${a.note ? ' · ' + esc(a.note) : ''}</div>
+        </div>
+        <span class="tiny muted">${esc(p.name.replace('示例计划：', ''))}</span>
+      </div>`);
+    }));
+    actBody = rows.join('');
+  }
+
+  const totalAct = todayPlans.reduce((a, p) => a + (p.actions || []).length, 0);
+  const doneAct = totalAct ? todayPlans.reduce((a, p) => a + (p.actions || []).filter((x, i) => lg.items[p.id + ':' + i]).length, 0) : 0;
+
+  // 感受
+  const feels = ['轻松', '适中', '吃力', '疼痛'];
+  const feelRow = `<div class="row" style="gap:6px">
+    ${feels.map(f => `<div class="btn xs ${lg.feel === f ? 'primary' : 'ghost'}" data-act="rehabFeel" data-f="${f}"
+      style="flex:1;text-align:center;padding:6px 0">${f}</div>`).join('')}
+  </div>`;
+
+  // 14 天热力图
+  const cells = [];
+  for (let i = 13; i >= 0; i--) {
+    const d = addDays(-i);
+    const l = logs.find(x => x.date === d);
+    const n = l ? Object.keys(l.items || {}).filter(k => l.items[k]).length : 0;
+    const lv = n === 0 ? 0 : n <= 1 ? 1 : n <= 3 ? 2 : 3;
+    cells.push({ d, lv, n });
+  }
+  const heat = `<div class="heat">
+    <div class="heat-row">${cells.slice(0, 7).map(c => `<div class="heat-cell lv${c.lv} ${c.d === t ? 'today' : ''}" title="${c.d}">${c.n || ''}</div>`).join('')}</div>
+    <div class="heat-row">${cells.slice(7).map(c => `<div class="heat-cell lv${c.lv} ${c.d === t ? 'today' : ''}" title="${c.d}">${c.n || ''}</div>`).join('')}</div>
+  </div>
+  <div class="between tiny muted" style="margin-top:2px"><span>14 天前</span><span>今天</span></div>`;
+
+  // 计划列表
+  const planRows = plans.length ? plans.map(p => `<div class="li">
+      <div class="grow" style="min-width:0">
+        <div class="sm">${esc(p.name)}</div>
+        <div class="tiny muted" style="margin-top:2px">${(p.weekdays || []).map(d => WEEK[d]).join('、') || '未设置'} · ${(p.actions || []).length} 个动作</div>
+      </div>
+      <span class="muted" data-act="planDel" data-id="${p.id}" style="font-size:11px;padding:2px 4px;cursor:pointer">✕</span>
+    </div>`).join('') : empty('还没有训练计划');
+
+  return `<section class="card">
+      <div class="between">
+        <div class="card-title"><span class="ic">🩹</span>今日训练</div>
+        <div class="tag" style="color:${doneAct === totalAct && totalAct ? 'var(--green)' : 'var(--amber)'}">${doneAct}/${totalAct}</div>
+      </div>
+      ${actBody}
+      ${totalAct ? `<div class="divider"></div><div class="tiny muted">今天的身体感受</div>${feelRow}` : ''}
+    </section>`
+    + card('坚持情况', '🔥', `<div class="row" style="gap:14px;align-items:flex-end">
+        <div class="metric"><div class="v" style="color:var(--accent)">${rehabStreak()}<small> 天</small></div><div class="k">连续打卡</div></div>
+        <div class="grow tiny muted" style="text-align:right">共 ${logs.filter(l => Object.keys(l.items || {}).some(k => l.items[k])).length} 天有记录</div>
+      </div>
+      <div class="divider"></div>${heat}`)
+    + card('训练计划', '📐', planRows, { text: '＋ 新建', act: 'newPlan' });
+}
+
+/* ===================================================================
+   页面：饮食计划
+   =================================================================== */
+function viewDiet() {
+  const d = state.dietDate;
+  const map = Store.get('diet_days', {});
+  const day = map[d] || { meals: [] };
+  const meals = day.meals || [];
+  const isToday = d === todayStr();
+  const eaten = meals.filter(m => m.eaten).length;
+
+  const nav = `<section class="card tight">
+    <div class="between">
+      <div class="icon-btn" data-act="dietPrev" style="font-size:16px">‹</div>
+      <div style="text-align:center">
+        <div class="b sm">${mdText(d)}${isToday ? ' · 今天' : ''}</div>
+        <div class="tiny muted" style="margin-top:2px">${meals.length ? eaten + ' / ' + meals.length + ' 餐已完成' : '还没有记录'}</div>
+      </div>
+      <div class="icon-btn" data-act="dietNext" style="font-size:16px">›</div>
+    </div>
+    ${meals.length ? `<div class="progress"><i style="width:${Math.round(eaten / meals.length * 100)}%"></i></div>` : ''}
+  </section>`;
+
+  const mealRows = meals.length ? meals.map(m => `<div class="li" style="align-items:flex-start">
+      <div class="check ${m.eaten ? 'on' : ''}" data-act="mealToggle" data-id="${m.id}" style="margin-top:1px">${m.eaten ? '✓' : ''}</div>
+      <div class="grow" style="min-width:0">
+        <div class="row" style="gap:6px"><span class="tiny b" style="color:var(--amber)">${esc(m.slot)}</span></div>
+        <div class="sm" style="margin-top:2px;line-height:1.45;text-decoration:${m.eaten ? 'line-through' : 'none'};color:${m.eaten ? 'var(--sub)' : 'var(--ink)'}">${esc(m.content)}</div>
+        ${m.note ? `<div class="tiny muted" style="margin-top:2px">${esc(m.note)}</div>` : ''}
+      </div>
+      <span class="muted" data-act="mealDel" data-id="${m.id}" style="font-size:11px;padding:2px 4px;cursor:pointer">✕</span>
+    </div>`).join('') : empty('这一天还没有餐单');
+
+  const tpls = Store.get('diet_templates', []);
+  const tplRows = tpls.length ? tpls.map(tp => `<div class="li">
+      <div class="grow" style="min-width:0">
+        <div class="sm">${esc(tp.name)}</div>
+        <div class="tiny muted" style="margin-top:2px">${(tp.meals || []).map(m => m.slot).join(' / ')}</div>
+      </div>
+      <button class="btn xs" data-act="applyTpl" data-id="${tp.id}">套用</button>
+    </div>`).join('') : empty('还没有模板');
+
+  // 未来 7 天
+  const week = [];
+  for (let i = 0; i < 7; i++) {
+    const dd = addDays(i);
+    const dy = map[dd];
+    const n = dy ? (dy.meals || []).length : 0;
+    const e = dy ? (dy.meals || []).filter(m => m.eaten).length : 0;
+    week.push({ dd, n, e });
+  }
+  const weekRow = `<div style="display:flex;gap:6px">
+    ${week.map(w => `<div style="flex:1;text-align:center;cursor:pointer" data-act="dietPick" data-d="${w.dd}">
+      <div class="tiny muted" style="margin-bottom:4px">${WEEK[new Date(w.dd.split('-')[0], w.dd.split('-')[1] - 1, w.dd.split('-')[2]).getDay()].replace('周', '')}</div>
+      <div style="height:34px;border-radius:7px;background:${w.n ? (w.e === w.n ? '#5F7A63' : w.e ? '#A9C2AC' : '#E3E9E3') : '#F0F0EA'};
+        color:${w.n ? '#fff' : '#B4B4AC'};font-size:11px;display:flex;align-items:center;justify-content:center;font-weight:500">${w.n ? w.e + '/' + w.n : '·'}</div>
+      <div class="tiny muted" style="margin-top:3px">${w.dd.slice(8)}</div>
+    </div>`).join('')}
+  </div>`;
+
+  return nav
+    + card('当日餐单', '🥗', mealRows, { text: '＋ 添加', act: 'newMeal' })
+    + card('未来 7 天', '📅', weekRow)
+    + card('模板库', '📦', tplRows, { text: '＋ 存为模板', act: 'newTpl' });
+}
+
+function ensureDietDay(d) {
+  const map = Store.get('diet_days', {});
+  if (!map[d]) map[d] = { meals: [] };
+  return map;
+}
+/* ===================================================================
+   页面：吃药提醒
+   =================================================================== */
+function viewMed() {
+  const meds = Store.get('meds', []);
+  const actives = meds.filter(m => m.active);
+  const t = todayStr();
+  const logs = Store.get('med_logs', {});
+  const dayLog = logs[t] || {};
+  const st = medStatus();
+
+  let total = 0, done = 0;
+  actives.forEach(m => (m.times || []).forEach(tm => { total++; if (dayLog[m.id + '@' + tm]) done++; }));
+  const pct = total ? Math.round(done / total * 100) : 0;
+
+  const head = `<section class="card" style="gap:12px">
+    <div class="between">
+      <div class="card-title"><span class="ic">💊</span>今日服药</div>
+      ${st.level === 2 ? tag('有漏服', '#C0392B') : st.level === 1 ? tag('待服药', '#C9962E') : tag('正常', '#4A8A5C')}
+    </div>
+    <div class="row" style="align-items:flex-end;gap:10px">
+      <div style="font-size:30px;font-weight:600;line-height:1;color:${pct >= 80 ? 'var(--green)' : pct >= 50 ? 'var(--amber)' : 'var(--red)'}">${done}<span style="font-size:14px;color:var(--sub);font-weight:500"> / ${total}</span></div>
+      <div class="tiny muted" style="padding-bottom:4px">${total ? (pct === 100 ? '今天全部完成，很好' : '还有 ' + (total - done) + ' 次待完成') : '今天没有用药安排'}</div>
+    </div>
+    <div class="progress"><i style="width:${pct}%;background:${pct >= 80 ? 'var(--green)' : 'var(--amber)'}"></i></div>
+    ${st.level ? `<div class="row" style="background:${st.level === 2 ? '#FBEDEA' : '#FBF3E2'};border-radius:9px;padding:9px 11px;gap:8px">
+      <span style="font-size:12px">${st.level === 2 ? '⏰' : '🔔'}</span>
+      <span class="tiny" style="color:${st.level === 2 ? '#8A2C1C' : '#8A6A18'};line-height:1.45">${esc(st.sub)}</span>
+    </div>` : ''}
+  </section>`;
+
+  // 时间轴：按时间点分组
+  const slots = {};
+  actives.forEach(m => (m.times || []).forEach(tm => {
+    if (!slots[tm]) slots[tm] = [];
+    slots[tm].push(m);
+  }));
+  const slotKeys = Object.keys(slots).sort();
+  const now = hm2min(nowHM());
+  const timeline = slotKeys.length ? slotKeys.map(tm => {
+    const over = hm2min(tm) + 120 < now;
+    const soon = !over && hm2min(tm) <= now;
+    return `<div style="display:flex;gap:10px">
+      <div style="width:44px;flex:none;text-align:right">
+        <div class="b sm" style="color:${over ? 'var(--red)' : soon ? 'var(--amber)' : 'var(--ink)'};font-variant-numeric:tabular-nums">${tm}</div>
+        <div class="tiny muted" style="font-size:9.5px">${over ? '已超时' : soon ? '进行中' : '待服'}</div>
+      </div>
+      <div style="width:7px;flex:none;display:flex;flex-direction:column;align-items:center;padding-top:4px">
+        <div style="width:7px;height:7px;border-radius:50%;background:${slots[tm].every(m => dayLog[m.id + '@' + tm]) ? 'var(--green)' : over ? 'var(--red)' : 'var(--line)'}"></div>
+        <div style="width:1px;flex:1;background:var(--line-soft);margin-top:3px"></div>
+      </div>
+      <div class="grow" style="min-width:0;padding-bottom:10px">
+        ${slots[tm].map(m => {
+      const on = !!dayLog[m.id + '@' + tm];
+      return `<div class="row" style="gap:8px;padding:5px 0">
+          <div class="grow" style="min-width:0">
+            <div class="sm ${on ? 'muted' : ''}" style="text-decoration:${on ? 'line-through' : 'none'}">${esc(m.name)}</div>
+            <div class="tiny muted">${esc(m.dose)}${m.note ? ' · ' + esc(m.note) : ''}</div>
+          </div>
+          ${on
+          ? `<span class="tiny" style="color:var(--green);white-space:nowrap" data-act="medToggle" data-id="${m.id}" data-t="${tm}">✓ 已服</span>`
+          : `<button class="btn xs" data-act="medToggle" data-id="${m.id}" data-t="${tm}">打卡</button>`}
+        </div>`;
+    }).join('')}
+      </div>
+    </div>`;
+  }).join('') : empty('还没有设置服药时间');
+
+  // 药品管理
+  const medRows = meds.length ? meds.map(m => `<div class="li" style="align-items:flex-start">
+      <div class="grow" style="min-width:0">
+        <div class="row" style="gap:6px">
+          <span class="sm b">${esc(m.name)}</span>
+          ${m.active ? '' : `<span class="tiny" style="color:var(--sub);background:#F2F2ED;border-radius:5px;padding:1px 5px">已停用</span>`}
+        </div>
+        <div class="tiny muted" style="margin-top:2px">${esc(m.dose)} · ${(m.times || []).join(' / ')}${m.note ? ' · ' + esc(m.note) : ''}</div>
+      </div>
+      <div class="row" style="gap:2px">
+        <span class="tiny" data-act="medActive" data-id="${m.id}" style="color:var(--accent);padding:3px 6px;cursor:pointer">${m.active ? '停用' : '启用'}</span>
+        <span class="muted" data-act="medDel" data-id="${m.id}" style="font-size:11px;padding:3px 5px;cursor:pointer">✕</span>
+      </div>
+    </div>`).join('') : empty('还没有药品');
+
+  // 7 天依从率
+  const days = [];
+  for (let i = 6; i >= 0; i--) days.push(addDays(-i));
+  const rates = days.map(d => {
+    let tt = 0, dd = 0;
+    const dl = logs[d] || {};
+    meds.forEach(m => (m.times || []).forEach(tm => { tt++; if (dl[m.id + '@' + tm]) dd++; }));
+    return { d, rate: tt ? Math.round(dd / tt * 100) : 0, tt };
+  });
+  const bars = `<div class="bars-chart">
+    ${rates.map(r => `<div class="bc">
+      <div class="bar" style="height:${Math.max(3, r.rate / 100 * 46)}px;background:${r.rate >= 80 ? 'var(--green)' : r.rate >= 50 ? 'var(--amber)' : r.tt ? 'var(--red)' : '#E0E0DA'}"></div>
+      <div class="bl">${r.tt ? r.rate + '%' : ''}</div>
+      <div class="bl" style="opacity:.7">${WEEK[new Date(r.d.split('-')[0], r.d.split('-')[1] - 1, r.d.split('-')[2]).getDay()].replace('周', '')}</div>
+    </div>`).join('')}
+  </div>`;
+
+  return head
+    + card('今日时间轴', '🕐', timeline)
+    + card('药品管理', '🗂️', medRows, { text: '＋ 添加', act: 'newMed' })
+    + card('近 7 天依从率', '📊', bars + `<div class="tiny muted center">平均 ${adherence7()}%</div>`);
+}
+
+/* ===================================================================
+   页面：体温监测
+   =================================================================== */
+function viewTemp() {
+  const logs = Store.get('temp_logs', []).slice().sort((a, b) => a.datetime < b.datetime ? -1 : 1);
+  const last = logs.length ? logs[logs.length - 1] : null;
+  const lv = last ? tempLevel(last.value) : null;
+
+  let mx = null, mn = null, avg = null;
+  if (logs.length) {
+    const vals = logs.map(l => l.value);
+    mx = Math.max.apply(null, vals); mn = Math.min.apply(null, vals);
+    avg = vals.reduce((a, b) => a + b, 0) / vals.length;
+  }
+
+  const hero = `<section class="card" style="gap:10px">
+    <div class="between">
+      <div class="card-title"><span class="ic">🌡️</span>最新体温</div>
+      ${lv ? `<span class="tag" style="color:${lv.color}">${lv.txt}</span>` : ''}
+    </div>
+    <div class="row" style="align-items:flex-end;gap:8px">
+      <div style="font-size:44px;font-weight:600;line-height:.95;letter-spacing:-1.5px;color:${lv ? lv.color : 'var(--sub)'}">${last ? last.value.toFixed(1) : '—'}<span style="font-size:16px;font-weight:500;margin-left:2px">℃</span></div>
+      <div class="tiny muted" style="padding-bottom:5px;line-height:1.5">${last ? esc(last.datetime.replace('T', ' ')) + (last.note ? '<br>' + esc(last.note) : '') : '还没有记录'}</div>
+    </div>
+    <div class="divider"></div>
+    <div class="row" style="gap:0">
+      <div class="metric grow" style="align-items:center"><div class="v" style="font-size:16px">${mx != null ? mx.toFixed(1) : '—'}</div><div class="k">最高</div></div>
+      <div style="width:1px;height:24px;background:var(--line-soft)"></div>
+      <div class="metric grow" style="align-items:center"><div class="v" style="font-size:16px">${mn != null ? mn.toFixed(1) : '—'}</div><div class="k">最低</div></div>
+      <div style="width:1px;height:24px;background:var(--line-soft)"></div>
+      <div class="metric grow" style="align-items:center"><div class="v" style="font-size:16px">${avg != null ? avg.toFixed(1) : '—'}</div><div class="k">平均</div></div>
+    </div>
+  </section>`;
+
+  const chart = logs.length > 1
+    ? lineChart(logs.slice(-14).map(l => l.value), { warn: 37.3, min: 36 })
+    : empty('至少需要 2 条记录才能画趋势');
+
+  const rows = logs.length ? logs.slice().reverse().slice(0, 20).map(l => {
+    const l2 = tempLevel(l.value);
+    return `<div class="li">
+      <div style="width:7px;height:7px;border-radius:50%;background:${l2.color};flex:none"></div>
+      <div class="grow" style="min-width:0">
+        <div class="sm">${l.value.toFixed(1)} ℃ <span class="tiny" style="color:${l2.color};margin-left:4px">${l2.txt}</span></div>
+        <div class="tiny muted" style="margin-top:2px">${esc(l.datetime.replace('T', ' '))}${l.note ? ' · ' + esc(l.note) : ''}</div>
+      </div>
+      <span class="muted" data-act="tempDel" data-id="${l.id}" style="font-size:11px;padding:2px 4px;cursor:pointer">✕</span>
+    </div>`;
+  }).join('') : empty('还没有记录');
+
+  return hero
+    + card('趋势（近 14 次）', '📈', chart + `<div class="tiny muted center">虚线为发热警戒线 37.3 ℃</div>`)
+    + card('记录明细', '📋', rows, { text: '＋ 记录', act: 'tempAdd' });
+}
+
+/* ===================================================================
+   页面：环境湿度
+   =================================================================== */
+const CITIES = {
+  '北京': [39.90, 116.41], '上海': [31.23, 121.47], '广州': [23.13, 113.26],
+  '深圳': [22.54, 114.06], '成都': [30.57, 104.07], '杭州': [30.27, 120.15]
+};
+let weather = { loading: false, data: null, err: '' };
+
+function viewHumid() {
+  const logs = Store.get('humid_logs', []).slice().sort((a, b) => a.datetime < b.datetime ? -1 : 1);
+  const last = logs.length ? logs[logs.length - 1] : null;
+  const lv = last ? humidLevel(last.value) : null;
+  const settings = Store.get('settings', DEFAULT_SETTINGS);
+
+  let mx = null, mn = null, avg = null;
+  if (logs.length) {
+    const vals = logs.map(l => l.value);
+    mx = Math.max.apply(null, vals); mn = Math.min.apply(null, vals); avg = vals.reduce((a, b) => a + b, 0) / vals.length;
+  }
+
+  const hero = `<section class="card" style="gap:10px">
+    <div class="between">
+      <div class="card-title"><span class="ic">💧</span>室内湿度</div>
+      ${lv ? `<span class="tag" style="color:${lv.color}">${lv.txt}</span>` : ''}
+    </div>
+    <div class="row" style="align-items:flex-end;gap:8px">
+      <div style="font-size:44px;font-weight:600;line-height:.95;letter-spacing:-1.5px;color:${lv ? lv.color : 'var(--sub)'}">${last ? Math.round(last.value) : '—'}<span style="font-size:16px;font-weight:500;margin-left:2px">%</span></div>
+      <div class="tiny muted" style="padding-bottom:5px;line-height:1.5">${last ? esc(last.place || '室内') + ' · ' + esc(last.datetime.replace('T', ' ')) : '还没有记录'}</div>
+    </div>
+    <div class="divider"></div>
+    <div class="row" style="gap:0">
+      <div class="metric grow" style="align-items:center"><div class="v" style="font-size:16px">${mx != null ? Math.round(mx) : '—'}</div><div class="k">最高</div></div>
+      <div style="width:1px;height:24px;background:var(--line-soft)"></div>
+      <div class="metric grow" style="align-items:center"><div class="v" style="font-size:16px">${mn != null ? Math.round(mn) : '—'}</div><div class="k">最低</div></div>
+      <div style="width:1px;height:24px;background:var(--line-soft)"></div>
+      <div class="metric grow" style="align-items:center"><div class="v" style="font-size:16px">${avg != null ? Math.round(avg) : '—'}</div><div class="k">平均</div></div>
+    </div>
+  </section>`;
+
+  // 室外
+  let outBody;
+  if (weather.loading) {
+    outBody = `<div class="tiny muted center" style="padding:12px 0">正在获取室外天气…</div>`;
+  } else if (weather.data) {
+    const d = weather.data;
+    outBody = `<div class="row" style="gap:12px">
+      <div class="metric"><div class="v" style="font-size:20px">${d.temp.toFixed(1)}<small> ℃</small></div><div class="k">室外温度</div></div>
+      <div style="width:1px;height:28px;background:var(--line-soft)"></div>
+      <div class="metric"><div class="v" style="font-size:20px;color:${humidLevel(d.hum).color}">${Math.round(d.hum)}<small> %</small></div><div class="k">室外湿度 · ${humidLevel(d.hum).txt}</div></div>
+    </div>
+    <div class="tiny muted">${esc(settings.city || '北京')} · ${esc(d.time)} 更新 · 数据来自 Open-Meteo</div>`;
+  } else {
+    outBody = `<div class="tiny muted" style="line-height:1.6">${esc(weather.err || '未获取。')} 室外数据仅作参考，不影响本地记录。</div>
+      <button class="btn ghost sm block" data-act="weatherRefresh">重新获取</button>`;
+  }
+
+  const chart = logs.length > 1
+    ? lineChart(logs.slice(-14).map(l => l.value), { warn: 70, max: 80 })
+    : empty('至少需要 2 条记录才能画趋势');
+
+  const rows = logs.length ? logs.slice().reverse().slice(0, 20).map(l => {
+    const l2 = humidLevel(l.value);
+    return `<div class="li">
+      <div style="width:7px;height:7px;border-radius:50%;background:${l2.color};flex:none"></div>
+      <div class="grow" style="min-width:0">
+        <div class="sm">${Math.round(l.value)} % <span class="tiny" style="color:${l2.color};margin-left:4px">${l2.txt}</span></div>
+        <div class="tiny muted" style="margin-top:2px">${esc(l.datetime.replace('T', ' '))}${l.place ? ' · ' + esc(l.place) : ''}${l.note ? ' · ' + esc(l.note) : ''}</div>
+      </div>
+      <span class="muted" data-act="humidDel" data-id="${l.id}" style="font-size:11px;padding:2px 4px;cursor:pointer">✕</span>
+    </div>`;
+  }).join('') : empty('还没有记录');
+
+  return hero
+    + card('室外参考', '🌤️', outBody, { text: '刷新', act: 'weatherRefresh' })
+    + card('趋势（近 14 次）', '📈', chart + `<div class="tiny muted center">舒适区间 30–70%，虚线为 70% 上限</div>`)
+    + card('记录明细', '📋', rows, { text: '＋ 记录', act: 'humidAdd' });
+}
+
+function fetchWeather() {
+  const settings = Store.get('settings', DEFAULT_SETTINGS);
+  const c = CITIES[settings.city] || CITIES['北京'];
+  weather.loading = true; weather.err = '';
+  render();
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${c[0]}&longitude=${c[1]}&current=temperature_2m,relative_humidity_2m&timezone=auto`;
+  fetch(url).then(r => r.json()).then(j => {
+    const cur = j.current || {};
+    weather = {
+      loading: false, err: '',
+      data: { temp: Number(cur.temperature_2m), hum: Number(cur.relative_humidity_2m), time: String(cur.time || '').replace('T', ' ') }
+    };
+    render();
+  }).catch(e => {
+    weather = { loading: false, data: null, err: '获取失败（可能是网络或跨域限制）。' };
+    render();
+  });
+}
+
+/* ===================================================================
+   页面：数据与设置
+   =================================================================== */
+const MODULES = [
+  { k: 'dev_projects', n: '开发项目' }, { k: 'dev_tasks', n: '开发任务' },
+  { k: 'dev_notes', n: '开发笔记' }, { k: 'dev_time', n: '时间记录' },
+  { k: 'rehab_plans', n: '康复计划' }, { k: 'rehab_logs', n: '康复打卡' },
+  { k: 'diet_days', n: '饮食记录' }, { k: 'diet_templates', n: '饮食模板' },
+  { k: 'meds', n: '药品' }, { k: 'med_logs', n: '服药记录' },
+  { k: 'temp_logs', n: '体温记录' }, { k: 'humid_logs', n: '湿度记录' },
+  { k: 'memos', n: '备忘' }
+];
+
+function viewSettings() {
+  const s = Store.get('settings', DEFAULT_SETTINGS);
+  const size = Store.sizeKB();
+
+  const profile = `<section class="card">
+    <div class="card-title"><span class="ic">👤</span>个人</div>
+    <div class="row" style="gap:8px">
+      <input class="input" id="setName" value="${esc(s.name || '')}" placeholder="怎么称呼你" style="flex:1">
+      <button class="btn primary sm" data-act="saveName">保存</button>
+    </div>
+    <div class="row" style="gap:8px">
+      <span class="tiny muted" style="flex:none">所在城市</span>
+      <select id="setCity" data-act="saveCity" style="flex:1">
+        ${Object.keys(CITIES).map(c => `<option ${c === s.city ? 'selected' : ''}>${c}</option>`).join('')}
+      </select>
+    </div>
+    <div class="tiny muted">城市用于获取室外温湿度参考</div>
+  </section>`;
+
+  const backup = `<section class="card">
+    <div class="card-title"><span class="ic">💾</span>备份与恢复</div>
+    <div class="between tiny muted">
+      <span>本机数据占用</span><span class="b" style="color:var(--ink)">${size < 1 ? (size * 1024).toFixed(0) + ' B' : size.toFixed(1) + ' KB'}</span>
+    </div>
+    <div class="row" style="gap:8px">
+      <button class="btn sm" style="flex:1" data-act="exportData">导出 JSON</button>
+      <button class="btn sm" style="flex:1" data-act="importData">导入 JSON</button>
+    </div>
+    <div class="tiny muted" style="line-height:1.55">导出的文件结构与鸿蒙版一致（<code style="font-size:10.5px">app / version / data</code>，data 的键为 <code style="font-size:10.5px">wlt_</code> 前缀），可直接在鸿蒙应用里导入。</div>
+    <input type="file" id="importFile" accept=".json,application/json" style="display:none">
+  </section>`;
+
+  const clean = `<section class="card">
+    <div class="card-title"><span class="ic">🧹</span>分模块清理</div>
+    <div class="tiny muted">点一下只清除对应模块，其余数据保留。</div>
+    <div class="row wrap" style="gap:6px">
+      ${MODULES.map(m => `<button class="btn xs ghost" data-act="clearModule" data-k="${m.k}" style="margin-bottom:0">${m.n}</button>`).join('')}
+    </div>
+  </section>`;
+
+  const danger = `<section class="card" style="border-color:#F0D9D4">
+    <div class="card-title" style="color:var(--red)"><span class="ic">⚠️</span>危险操作</div>
+    <button class="btn ghost sm block" data-act="reseed">恢复示例数据（覆盖全部）</button>
+    <button class="btn danger sm block" data-act="clearAll">清空全部数据</button>
+  </section>`;
+
+  const about = `<div class="tiny muted center" style="line-height:1.7;padding:4px 0 8px">
+    我的工作生活台 · v1<br>
+    鸿蒙原生版（ArkTS）+ 本页交互预览<br>
+    所有数据仅保存在本机
+  </div>`;
+
+  return profile + backup + clean + danger + about;
+}
+/* ===================================================================
+   弹窗表单
+   =================================================================== */
+function sheetShell(title, sub, body, okText, okAct) {
+  return `<h3>${esc(title)}</h3>${sub ? `<div class="sub">${esc(sub)}</div>` : ''}
+    ${body}
+    <div class="acts">
+      <button class="btn ghost" data-act="closeSheet">取消</button>
+      <button class="btn primary" data-act="${okAct}">${esc(okText)}</button>
+    </div>`;
+}
+function field(label, inner) {
+  return `<div class="field"><label>${esc(label)}</label>${inner}</div>`;
+}
+function weekdayPicker(selected) {
+  return `<div class="wd" id="wdPick">
+    ${WEEK.map((w, i) => `<div class="${selected.indexOf(i) >= 0 ? 'on' : ''}" data-act="wdToggle" data-i="${i}">${w.replace('周', '')}</div>`).join('')}
+  </div>`;
+}
+let wdTemp = [];
+
+const SHEETS = {
+  newProject() {
+    openSheet(sheetShell('新建项目', '项目用来归集任务与工时', field('项目名称', '<input class="input" id="fName" placeholder="例如：我的工作生活台">'), '创建', 'saveProject'));
+  },
+  newTask() {
+    const projects = Store.get('dev_projects', []);
+    openSheet(sheetShell('新建任务', '', field('任务标题', '<input class="input" id="fTitle" placeholder="要做什么">')
+      + field('所属项目', `<select id="fProject">${projects.map(p => `<option value="${p.id}" ${p.id === state.devProject ? 'selected' : ''}>${esc(p.name)}</option>`).join('')}</select>`)
+      + field('状态', `<select id="fStatus"><option value="todo">待办</option><option value="doing">进行中</option><option value="done">已完成</option></select>`)
+      + field('截止日期', `<input class="input" id="fDue" type="date" value="${todayStr()}">`)
+      , '创建', 'saveTask'));
+  },
+  newNote() {
+    openSheet(sheetShell('新建笔记', '', field('标题', '<input class="input" id="fTitle" placeholder="笔记标题">')
+      + field('标签（逗号分隔）', '<input class="input" id="fTags" placeholder="鸿蒙, 存储">')
+      + field('正文', '<textarea id="fBody" placeholder="记点什么…"></textarea>')
+      , '保存', 'saveNote'));
+  },
+  openNote(id) {
+    const n = Store.get('dev_notes', []).find(x => x.id === id);
+    if (!n) return;
+    openSheet(sheetShell('编辑笔记', new Date(n.updatedAt).toLocaleString('zh-CN'), field('标题', `<input class="input" id="fTitle" value="${esc(n.title)}">`)
+      + field('标签（逗号分隔）', `<input class="input" id="fTags" value="${esc((n.tags || []).join(', '))}">`)
+      + field('正文', `<textarea id="fBody" style="min-height:110px">${esc(n.body)}</textarea>`)
+      , '保存', 'saveNote'));
+    document.getElementById('sheet').setAttribute('data-id', id);
+  },
+  newPlan() {
+    wdTemp = [new Date().getDay()];
+    openSheet(sheetShell('新建训练计划', '动作格式：名称 | 组数 | 次数，每行一个',
+      field('计划名称', '<input class="input" id="fName" placeholder="例如：上肢康复">')
+      + field('训练日', weekdayPicker(wdTemp))
+      + field('动作', '<textarea id="fActs" placeholder="肩部外旋 | 3 | 12次&#10;颈部拉伸 | 2 | 30秒"></textarea>')
+      , '创建', 'savePlan'));
+  },
+  newMeal() {
+    openSheet(sheetShell('添加餐次', mdText(state.dietDate), field('餐次', `<select id="fSlot"><option>早餐</option><option>午餐</option><option>晚餐</option><option>加餐</option></select>`)
+      + field('内容', '<input class="input" id="fContent" placeholder="吃了什么">')
+      + field('备注', '<input class="input" id="fNote" placeholder="可选">')
+      , '添加', 'saveMeal'));
+  },
+  newTpl() {
+    openSheet(sheetShell('存为模板', '把常用的一天存下来，之后一键套用',
+      field('模板名称', '<input class="input" id="fName" placeholder="例如：清淡日">')
+      + field('早餐', '<input class="input" id="fB" placeholder="小米粥 + 鸡蛋">')
+      + field('午餐', '<input class="input" id="fL" placeholder="清蒸鱼 + 西兰花">')
+      + field('晚餐', '<input class="input" id="fD" placeholder="蔬菜汤 + 杂粮饭">')
+      , '保存', 'saveTpl'));
+  },
+  newMed() {
+    openSheet(sheetShell('添加药品', '时间用逗号分隔，24 小时制',
+      field('药品名称', '<input class="input" id="fName" placeholder="例如：维生素D">')
+      + field('剂量', '<input class="input" id="fDose" placeholder="1粒 / 5ml">')
+      + field('服药时间', '<input class="input" id="fTimes" placeholder="08:00, 20:00">')
+      + field('备注', '<input class="input" id="fNote" placeholder="随餐服用">')
+      , '添加', 'saveMed'));
+  },
+  tempAdd() {
+    const now = new Date();
+    const local = now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate()) + 'T' + pad(now.getHours()) + ':' + pad(now.getMinutes());
+    openSheet(sheetShell('记录体温', '正常腋温 36.0 – 37.3 ℃',
+      field('体温（℃）', '<input class="input" id="fValue" type="number" step="0.1" inputmode="decimal" placeholder="36.5">')
+      + field('时间', `<input class="input" id="fTime" type="datetime-local" value="${local}">`)
+      + field('备注', '<input class="input" id="fNote" placeholder="腋温 / 口温">')
+      , '保存', 'saveTemp'));
+  },
+  humidAdd() {
+    const now = new Date();
+    const local = now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate()) + 'T' + pad(now.getHours()) + ':' + pad(now.getMinutes());
+    openSheet(sheetShell('记录湿度', '舒适区间 30 – 70%',
+      field('湿度（%）', '<input class="input" id="fValue" type="number" step="1" inputmode="decimal" placeholder="52">')
+      + field('位置', '<input class="input" id="fPlace" placeholder="卧室 / 客厅">')
+      + field('时间', `<input class="input" id="fTime" type="datetime-local" value="${local}">`)
+      + field('备注', '<input class="input" id="fNote" placeholder="可选">')
+      , '保存', 'saveHumid'));
+  },
+  manualTime() {
+    const projects = Store.get('dev_projects', []);
+    openSheet(sheetShell('手动补记工时', '',
+      field('项目', `<select id="fProject">${projects.map(p => `<option value="${p.id}">${esc(p.name)}</option>`).join('') || '<option value="">无</option>'}</select>`)
+      + field('分钟', '<input class="input" id="fMin" type="number" inputmode="numeric" placeholder="30">')
+      + field('日期', `<input class="input" id="fDate" type="date" value="${todayStr()}">`)
+      + field('说明', '<input class="input" id="fNote" placeholder="做了什么">')
+      , '保存', 'saveManualTime'));
+  }
+};
+
+/* ===================================================================
+   动作表
+   =================================================================== */
+const ACT = {
+  drawer: openDrawer,
+  closeDrawer: closeDrawer,
+  closeToast() { document.getElementById('toast').classList.remove('on'); },
+  closeSheet: closeSheet,
+
+  go(el) {
+    if (state.view !== el.dataset.view) {
+      state.view = el.dataset.view;
+      state.scrollTop = 0;
+    }
+    render();
+  },
+  toggleToday(el) { toggleToday(el.dataset.key); },
+
+  /* 备忘 */
+  memoAdd() {
+    const t = val('newMemo');
+    if (!t) { toast('先写点什么'); return; }
+    const list = Store.get('memos', []);
+    list.unshift({ id: uid(), text: t, done: false, createdAt: Date.now() });
+    Store.set('memos', list);
+    document.getElementById('newMemo').value = '';
+    toast('已添加');
+    render();
+  },
+  memoDone(el) {
+    const list = Store.get('memos', []);
+    const it = list.find(x => x.id === el.dataset.id);
+    if (it) { it.done = true; Store.set('memos', list); toast('已完成'); render(); }
+  },
+  memoDel(el) {
+    const list = Store.get('memos', []).filter(x => x.id !== el.dataset.id);
+    Store.set('memos', list); render();
+  },
+
+  /* 开发 */
+  devTab(el) { state.devTab = +el.dataset.i; render(); },
+  pickProject(el) { state.devProject = el.dataset.id; render(); },
+  newProject() { SHEETS.newProject(); },
+  newTask() {
+    if (!Store.get('dev_projects', []).length) { toast('请先创建一个项目'); return; }
+    SHEETS.newTask();
+  },
+  taskCycle(el) {
+    const list = Store.get('dev_tasks', []);
+    const t = list.find(x => x.id === el.dataset.id);
+    if (!t) return;
+    t.status = t.status === 'todo' ? 'doing' : t.status === 'doing' ? 'done' : 'todo';
+    Store.set('dev_tasks', list);
+    render();
+  },
+  taskDel(el) {
+    Store.set('dev_tasks', Store.get('dev_tasks', []).filter(x => x.id !== el.dataset.id));
+    render();
+  },
+  newNote() { SHEETS.newNote(); },
+  openNote(el) { SHEETS.openNote(el.dataset.id); },
+  noteDel(el) {
+    Store.set('dev_notes', Store.get('dev_notes', []).filter(x => x.id !== el.dataset.id));
+    render();
+  },
+  timerStart() {
+    const pid = (document.getElementById('timerProject') || {}).value || '';
+    const label = val('timerLabel');
+    state.running = { projectId: pid, label, startedAt: Date.now() };
+    toast('开始计时');
+    render();
+  },
+  timerStop() {
+    if (!state.running) return;
+    const mins = Math.max(1, Math.round((Date.now() - state.running.startedAt) / 60000));
+    const list = Store.get('dev_time', []);
+    list.push({ id: uid(), date: todayStr(), projectId: state.running.projectId, minutes: mins, note: state.running.label || '计时' });
+    Store.set('dev_time', list);
+    state.running = null;
+    toast('已保存 ' + mins + ' 分钟');
+    render();
+  },
+  manualTime() { SHEETS.manualTime(); },
+
+  /* 康复 */
+  rehabCheck(el) {
+    const kk = el.dataset.key;
+    const t = todayStr();
+    const logs = Store.get('rehab_logs', []);
+    let lg = logs.find(l => l.date === t);
+    if (!lg) { lg = { date: t, items: {}, feel: '' }; logs.unshift(lg); }
+    lg.items[kk] = !lg.items[kk];
+    Store.set('rehab_logs', logs);
+    render();
+  },
+  rehabFeel(el) {
+    const t = todayStr();
+    const logs = Store.get('rehab_logs', []);
+    let lg = logs.find(l => l.date === t);
+    if (!lg) { lg = { date: t, items: {}, feel: '' }; logs.unshift(lg); }
+    lg.feel = el.dataset.f;
+    Store.set('rehab_logs', logs);
+    render();
+  },
+  newPlan() { SHEETS.newPlan(); },
+  planDel(el) {
+    Store.set('rehab_plans', Store.get('rehab_plans', []).filter(x => x.id !== el.dataset.id));
+    render();
+  },
+  wdToggle(el) {
+    const i = +el.dataset.i;
+    if (wdTemp.indexOf(i) >= 0) wdTemp = wdTemp.filter(x => x !== i);
+    else wdTemp.push(i);
+    el.classList.toggle('on');
+  },
+
+  /* 饮食 */
+  dietPrev() {
+    const d = new Date(state.dietDate.split('-')[0], state.dietDate.split('-')[1] - 1, state.dietDate.split('-')[2]);
+    d.setDate(d.getDate() - 1);
+    state.dietDate = dstr(d);
+    render();
+  },
+  dietNext() {
+    const d = new Date(state.dietDate.split('-')[0], state.dietDate.split('-')[1] - 1, state.dietDate.split('-')[2]);
+    d.setDate(d.getDate() + 1);
+    state.dietDate = dstr(d);
+    render();
+  },
+  dietPick(el) { state.dietDate = el.dataset.d; render(); },
+  mealToggle(el) {
+    const map = ensureDietDay(state.dietDate);
+    const m = map[state.dietDate].meals.find(x => x.id === el.dataset.id);
+    if (m) { m.eaten = !m.eaten; Store.set('diet_days', map); render(); }
+  },
+  mealDel(el) {
+    const map = ensureDietDay(state.dietDate);
+    map[state.dietDate].meals = map[state.dietDate].meals.filter(x => x.id !== el.dataset.id);
+    Store.set('diet_days', map);
+    render();
+  },
+  newMeal() { SHEETS.newMeal(); },
+  applyTpl(el) {
+    const tp = Store.get('diet_templates', []).find(x => x.id === el.dataset.id);
+    if (!tp) return;
+    const map = ensureDietDay(state.dietDate);
+    (tp.meals || []).forEach(m => {
+      map[state.dietDate].meals.push({ id: uid(), slot: m.slot, content: m.content, eaten: false, note: '' });
+    });
+    Store.set('diet_days', map);
+    toast('已套用「' + tp.name.replace('示例模板：', '') + '」');
+    render();
+  },
+  newTpl() { SHEETS.newTpl(); },
+
+  /* 吃药 */
+  medToggle(el) {
+    const logs = Store.get('med_logs', {});
+    const t = todayStr();
+    if (!logs[t]) logs[t] = {};
+    const k = el.dataset.id + '@' + el.dataset.t;
+    logs[t][k] = !logs[t][k];
+    Store.set('med_logs', logs);
+    render();
+  },
+  medDel(el) {
+    Store.set('meds', Store.get('meds', []).filter(x => x.id !== el.dataset.id));
+    render();
+  },
+  medActive(el) {
+    const list = Store.get('meds', []);
+    const m = list.find(x => x.id === el.dataset.id);
+    if (m) { m.active = !m.active; Store.set('meds', list); render(); }
+  },
+  newMed() { SHEETS.newMed(); },
+
+  /* 体温 / 湿度 */
+  tempAdd() { SHEETS.tempAdd(); },
+  tempDel(el) {
+    Store.set('temp_logs', Store.get('temp_logs', []).filter(x => x.id !== el.dataset.id));
+    render();
+  },
+  humidAdd() { SHEETS.humidAdd(); },
+  humidDel(el) {
+    Store.set('humid_logs', Store.get('humid_logs', []).filter(x => x.id !== el.dataset.id));
+    render();
+  },
+  weatherRefresh() { fetchWeather(); },
+
+  /* 设置 */
+  saveName() {
+    const s = Store.get('settings', DEFAULT_SETTINGS);
+    s.name = val('setName');
+    Store.set('settings', s);
+    toast('已保存');
+    render();
+  },
+  exportData() {
+    const data = {};
+    Store.keys().forEach(k => { data[k] = localStorage.getItem(k); });
+    const obj = { app: 'work-life-table', version: 1, exportedAt: new Date().toISOString(), data };
+    const blob = new Blob([JSON.stringify(obj, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'work-life-table-backup-' + todayStr() + '.json';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(a.href), 3000);
+    const s = Store.get('settings', DEFAULT_SETTINGS);
+    s.lastBackupAt = Date.now(); Store.set('settings', s);
+    toast('已导出备份文件');
+  },
+  importData() { document.getElementById('importFile').click(); },
+  clearModule(el) {
+    const k = el.dataset.k;
+    const name = (MODULES.find(m => m.k === k) || {}).n || k;
+    Store.remove(k);
+    toast('已清除：' + name);
+    render();
+  },
+  reseed() {
+    Store.clearAll();
+    seed();
+    state.devProject = '';
+    state.dietDate = todayStr();
+    toast('已恢复示例数据');
+    render();
+  },
+  clearAll() {
+    openSheet(sheetShell('清空全部数据', '此操作不可撤销，建议先导出备份',
+      field('请输入「清空」以确认', '<input class="input" id="fConfirm" placeholder="清空">')
+      , '确认清空', 'doClearAll'));
+  },
+  doClearAll() {
+    if (val('fConfirm') !== '清空') { toast('输入不匹配，已取消'); return; }
+    Store.clearAll();
+    seed();
+    state.devProject = ''; state.dietDate = todayStr();
+    closeSheet();
+    toast('已清空并重置');
+    render();
+  },
+
+  /* ---------- 表单提交 ---------- */
+  saveProject() {
+    const name = val('fName');
+    if (!name) { toast('请填写项目名称'); return; }
+    const list = Store.get('dev_projects', []);
+    const id = uid();
+    list.push({ id, name, status: 'active' });
+    Store.set('dev_projects', list);
+    state.devProject = id;
+    closeSheet(); render(); toast('项目已创建');
+  },
+  saveTask() {
+    const title = val('fTitle');
+    if (!title) { toast('请填写任务标题'); return; }
+    const list = Store.get('dev_tasks', []);
+    list.push({
+      id: uid(), projectId: val('fProject'), title,
+      status: val('fStatus') || 'todo', due: val('fDue') || todayStr()
+    });
+    Store.set('dev_tasks', list);
+    closeSheet(); render(); toast('任务已创建');
+  },
+  saveNote() {
+    const title = val('fTitle');
+    if (!title) { toast('请填写标题'); return; }
+    const tags = val('fTags').split(/[,，]/).map(x => x.trim()).filter(x => x);
+    const body = val('fBody');
+    const list = Store.get('dev_notes', []);
+    const editId = document.getElementById('sheet').getAttribute('data-id');
+    if (editId) {
+      const n = list.find(x => x.id === editId);
+      if (n) { n.title = title; n.tags = tags; n.body = body; n.updatedAt = Date.now(); }
+      document.getElementById('sheet').removeAttribute('data-id');
+    } else {
+      list.unshift({ id: uid(), title, tags, body, updatedAt: Date.now() });
+    }
+    Store.set('dev_notes', list);
+    closeSheet(); render(); toast('已保存');
+  },
+  savePlan() {
+    const name = val('fName');
+    if (!name) { toast('请填写计划名称'); return; }
+    if (!wdTemp.length) { toast('至少选择一个训练日'); return; }
+    const raw = val('fActs');
+    const actions = raw.split('\n').map(l => l.trim()).filter(l => l).map(l => {
+      const p = l.split('|').map(x => x.trim());
+      return { name: p[0] || '动作', sets: p[1] || '1', repsOrSec: p[2] || '10次', note: p[3] || '' };
+    });
+    if (!actions.length) { toast('至少填写一个动作'); return; }
+    const list = Store.get('rehab_plans', []);
+    list.push({ id: uid(), name, weekdays: wdTemp.slice(), actions });
+    Store.set('rehab_plans', list);
+    closeSheet(); render(); toast('计划已创建');
+  },
+  saveMeal() {
+    const content = val('fContent');
+    if (!content) { toast('请填写内容'); return; }
+    const map = ensureDietDay(state.dietDate);
+    map[state.dietDate].meals.push({
+      id: uid(), slot: val('fSlot') || '早餐', content, eaten: false, note: val('fNote')
+    });
+    Store.set('diet_days', map);
+    closeSheet(); render(); toast('已添加');
+  },
+  saveTpl() {
+    const name = val('fName');
+    if (!name) { toast('请填写模板名称'); return; }
+    const meals = [];
+    if (val('fB')) meals.push({ slot: '早餐', content: val('fB') });
+    if (val('fL')) meals.push({ slot: '午餐', content: val('fL') });
+    if (val('fD')) meals.push({ slot: '晚餐', content: val('fD') });
+    if (!meals.length) { toast('至少填写一餐'); return; }
+    const list = Store.get('diet_templates', []);
+    list.push({ id: uid(), name, meals });
+    Store.set('diet_templates', list);
+    closeSheet(); render(); toast('模板已保存');
+  },
+  saveMed() {
+    const name = val('fName');
+    const times = val('fTimes').split(/[,，\s]+/).map(x => x.trim()).filter(x => /^\d{1,2}:\d{2}$/.test(x)).map(x => {
+      const p = x.split(':'); return pad(+p[0]) + ':' + p[1];
+    });
+    if (!name) { toast('请填写药品名称'); return; }
+    if (!times.length) { toast('请填写正确的时间，如 08:00'); return; }
+    const list = Store.get('meds', []);
+    list.push({ id: uid(), name, dose: val('fDose') || '1次', times, note: val('fNote'), active: true });
+    Store.set('meds', list);
+    closeSheet(); render(); toast('已添加');
+  },
+  saveTemp() {
+    const v = num('fValue', NaN);
+    if (isNaN(v) || v < 30 || v > 45) { toast('请输入 30 – 45 之间的体温'); return; }
+    const time = val('fTime') || (todayStr() + 'T' + nowHM());
+    const list = Store.get('temp_logs', []);
+    list.push({ id: uid(), datetime: time, value: v, note: val('fNote') });
+    Store.set('temp_logs', list);
+    closeSheet(); render(); toast('已记录 ' + v.toFixed(1) + ' ℃');
+  },
+  saveHumid() {
+    const v = num('fValue', NaN);
+    if (isNaN(v) || v < 0 || v > 100) { toast('请输入 0 – 100 之间的湿度'); return; }
+    const time = val('fTime') || (todayStr() + 'T' + nowHM());
+    const list = Store.get('humid_logs', []);
+    list.push({ id: uid(), datetime: time, value: v, place: val('fPlace') || '室内', note: val('fNote') });
+    Store.set('humid_logs', list);
+    closeSheet(); render(); toast('已记录 ' + Math.round(v) + '%');
+  },
+  saveManualTime() {
+    const m = num('fMin', 0);
+    if (m <= 0) { toast('请填写分钟数'); return; }
+    const list = Store.get('dev_time', []);
+    list.push({ id: uid(), date: val('fDate') || todayStr(), projectId: val('fProject'), minutes: Math.round(m), note: val('fNote') });
+    Store.set('dev_time', list);
+    closeSheet(); render(); toast('已补记 ' + Math.round(m) + ' 分钟');
+  }
+};
+
+/* ===================================================================
+   渲染
+   =================================================================== */
+const VIEWS = {
+  home: viewHome, dev: viewDev, rehab: viewRehab, diet: viewDiet,
+  med: viewMed, temp: viewTemp, humid: viewHumid, settings: viewSettings
+};
+
+function restoreFocus() {
+  if (!state.focus) return;
+  const el = document.getElementById(state.focus.id);
+  if (el) {
+    el.focus();
+    try { el.setSelectionRange(state.focus.pos, state.focus.pos); } catch (e) { }
+  }
+  state.focus = null;
+}
+
+function render() {
+  // 顶栏标题
+  const nav = NAV.find(n => n.key === state.view) || NAV[0];
+  document.getElementById('topTitle').textContent = nav.icon + ' ' + nav.label;
+
+  // 吃药角标
+  const st = medStatus();
+  const badge = document.getElementById('topBadge');
+  if (st.level > 0) {
+    badge.innerHTML = `<div class="pill-badge ${st.level === 2 ? 'danger' : 'warn'}" data-act="go" data-view="med">
+      <span class="dot"></span>${st.level === 2 ? '漏服 ' + st.count.miss : '待服 ' + st.count.wait}</div>`;
+  } else {
+    badge.innerHTML = '';
+  }
+
+  // 灯条
+  const pb = document.getElementById('pillBar');
+  if (st.level > 0) {
+    pb.innerHTML = `<div class="pillbar" data-act="go" data-view="med"
+      style="background:${st.level === 2 ? '#F7D9D3' : '#F4E6C9'};color:${st.level === 2 ? '#8A2C1C' : '#8A6A18'}">
+      <span class="pb-t">${st.level === 2 ? '⏰ 漏服' : '🔔 待服'}</span>
+      <span class="pb-s">${esc(st.sub)}</span>
+      <span class="pb-a" style="background:${st.level === 2 ? '#C0392B' : '#C9962E'}">去处理</span>
+    </div>`;
+  } else {
+    pb.innerHTML = '';
+  }
+
+  // 抽屉
+  document.getElementById('dnav').innerHTML = NAV.map(n =>
+    `<div class="dnav ${state.view === n.key ? 'on' : ''}" data-act="go" data-view="${n.key}">
+      <span class="di">${n.icon}</span><span>${n.label}</span></div>`).join('');
+
+  // 主内容
+  const main = document.getElementById('view');
+  const top = main.scrollTop;
+  main.innerHTML = (VIEWS[state.view] || viewHome)();
+  main.scrollTop = state.scrollTop != null ? state.scrollTop : top;
+
+  restoreFocus();
+}
+
+/* ---------- 事件委托 ---------- */
+document.addEventListener('click', function (e) {
+  const el = e.target.closest('[data-act]');
+  if (!el) return;
+  const act = el.dataset.act;
+  if (act === 'saveCity') return;
+  const fn = ACT[act];
+  if (fn) { e.preventDefault(); fn(el); }
+});
+
+document.addEventListener('input', function (e) {
+  const t = e.target;
+  if (t && t.id === 'noteSearch') {
+    state.noteQuery = t.value;
+    state.focus = { id: 'noteSearch', pos: t.selectionStart };
+    render();
+  }
+});
+
+document.addEventListener('change', function (e) {
+  const t = e.target;
+  if (!t) return;
+  if (t.id === 'setCity') {
+    const s = Store.get('settings', DEFAULT_SETTINGS);
+    s.city = t.value;
+    Store.set('settings', s);
+    weather = { loading: false, data: null, err: '' };
+    toast('城市已切换为' + t.value);
+  }
+  if (t.id === 'importFile') {
+    const f = t.files && t.files[0];
+    if (!f) return;
+    const reader = new FileReader();
+    reader.onload = function () {
+      try {
+        const obj = JSON.parse(String(reader.result));
+        if (obj.app !== 'work-life-table' || !obj.data) throw new Error('bad');
+        let n = 0;
+        Object.keys(obj.data).forEach(k => {
+          const key = k.indexOf('wlt_') === 0 ? k : 'wlt_' + k;
+          localStorage.setItem(key, obj.data[k]);
+          n++;
+        });
+        state.devProject = '';
+        toast('已导入 ' + n + ' 项数据');
+        render();
+      } catch (err) {
+        toast('备份文件格式无效');
+      }
+    };
+    reader.readAsText(f);
+    t.value = '';
+  }
+});
+
+/* 键盘：Esc 关闭弹层 */
+document.addEventListener('keydown', function (e) {
+  if (e.key === 'Escape') { closeSheet(); closeDrawer(); }
+  if (e.key === 'Enter' && e.target && e.target.id === 'newMemo') { ACT.memoAdd(); }
+});
+
+/* ---------- 时钟 & 计时器 ---------- */
+function updateClock() {
+  const d = new Date();
+  document.getElementById('clock').textContent = pad(d.getHours()) + ':' + pad(d.getMinutes());
+}
+function updateTimer() {
+  if (!state.running) return;
+  const el = document.getElementById('timerText');
+  if (!el) return;
+  const ms = Date.now() - state.running.startedAt;
+  const h = Math.floor(ms / 3600000), m = Math.floor(ms / 60000) % 60, s = Math.floor(ms / 1000) % 60;
+  el.textContent = pad(h) + ':' + pad(m) + ':' + pad(s);
+}
+setInterval(function () { updateClock(); updateTimer(); }, 1000);
+setInterval(function () {
+  // 每 30 秒刷新一次吃药灯条（对应原型的轮询）
+  const st = medStatus();
+  const cur = document.getElementById('topBadge').textContent.trim();
+  const want = st.level === 2 ? '漏服 ' + st.count.miss : st.level === 1 ? '待服 ' + st.count.wait : '';
+  if (cur !== want) render();
+}, 30000);
+
+/* ---------- 启动 ---------- */
+updateClock();
+render();
+
+</script>
+</body>
+</html>
